@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "blitzml"
-version = "0.3.0"
+version = "0.5.0"
 description = "A low-code library for machine learning pipelines"
 readme = "README.md"
-authors = [{ name = "AI Team", email = "info@realpython.com" }]
+authors = [{ name = "AI Team", email = "CV.Team.CSE.2023@gmail.com" }]
 license = { file = "LICENSE" }
 classifiers = [
     "License :: OSI Approved :: MIT License",

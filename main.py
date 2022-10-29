@@ -1,14 +1,27 @@
-from blitzml.csv import Pipeline
+from blitzml.tabular import Classification
+import pandas as pd
 
-dataset_folder = "auxiliary/data/"
-ground_truth_path = "auxiliary/ground_truth.csv"
-output_folder_path = "auxiliary/output/"
+# prepare your dataframes
+train_df = pd.read_csv("auxiliary/data/train.csv")
+test_df = pd.read_csv("auxiliary/data/test.csv")
+ground_truth_df = pd.read_csv("auxiliary/ground_truth.csv")
 
-auto = Pipeline(dataset_folder, ground_truth_path, output_folder_path, classifier = 'RF', n_estimators = 50)
+# create the pipeline with a certain classifier
+auto = Classification(train_df, test_df, ground_truth_df, classifier = 'RF', n_estimators = 50)
 
+# first perform data preprocessing
 auto.preprocess()
+# second train the model
 auto.train_the_model()
+
+
+# After training the model we can generate the following:
+auto.gen_pred_df()
 auto.gen_metrics_dict()
 
+# Then you can get their values using:
+pred_df = auto.pred_df
 metrics_dict = auto.metrics_dict
+
+print(pred_df.head())
 print(metrics_dict)

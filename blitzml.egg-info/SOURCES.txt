@@ -2,7 +2,7 @@ README.md
 pyproject.toml
 setup.py
 blitzml/__init__.py
-blitzml/csv.py
+blitzml/tabular.py
 blitzml.egg-info/PKG-INFO
 blitzml.egg-info/SOURCES.txt
 blitzml.egg-info/dependency_links.txt
