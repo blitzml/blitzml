@@ -20,6 +20,7 @@ class Classification:
 		self.model = None
 		self.pred_df = None
 		self.metrics_dict = None
+		self.target = None
 
 	def preprocess(self):
 		train = self.train_df
@@ -120,6 +121,7 @@ class Classification:
 		self.train_df = train_n.drop(target, axis = 1)
 		self.test_df  = test_n
 		self.target_col = train_n[target]
+		self.target = target
 
 	def train_the_model(self):
 		X = self.train_df
@@ -138,24 +140,35 @@ class Classification:
 			self.model.fit(X, y)
 
 	def gen_pred_df(self):
-	    preds = self.model.predict(self.test_df)
-	    self.pred_df = pd.DataFrame({"PassengerId": self.test_df["PassengerId"].values, "Survived": preds })		
+		preds = self.model.predict(self.test_df)
+		localtarget = self.target
+		# columns should be in submission
+		ground_truth_columns = list(self.ground_truth_df.columns)
+		ground_truth_columns.remove(localtarget)
+		# predict submission
+		pred_df = self.test_df[ground_truth_columns]
+		pred_df[localtarget] = preds
+		# assign to self.pred_df 
+		self.pred_df = pred_df
+		# self.pred_df = pd.DataFrame({"PassengerId": self.test_df["PassengerId"].values, "Survived": preds })	
+		
 	
 	def gen_metrics_dict(self):
 		# If the user calls this function before gen_pred_df()
-		if self.pred_df == None:
+		if self.pred_df.empty:  
 			self.gen_pred_df()
 
-	    x = self.ground_truth_df['Survived']
-	    y = self.pred_df['Survived']
-	    acc = accuracy_score(x, y)
-	    f1 = f1_score(x, y)
-	    pre = precision_score(x, y)
-	    recall = recall_score(x, y)
-	    tn, fp, fn, tp = confusion_matrix(x, y).ravel()
-	    specificity = tn / (tn+fp)
+		localtarget = self.target
+		x = self.ground_truth_df[localtarget]
+		y = self.pred_df[localtarget]
+		acc = accuracy_score(x, y)
+		f1 = f1_score(x, y)
+		pre = precision_score(x, y)
+		recall = recall_score(x, y)
+		tn, fp, fn, tp = confusion_matrix(x, y).ravel()
+		specificity = tn / (tn+fp)
 
-	    dict_metrics = {'Accuracy': acc, 'f1': f1, 'Precision': pre, 'Recall': recall, 'Specificity': specificity}
+		dict_metrics = {'Accuracy': acc, 'f1': f1, 'Precision': pre, 'Recall': recall, 'Specificity': specificity}
 
-	    # assign the resulting dictionary to self.metrics_dict
-	    self.metrics_dict = dict_metrics
+		# assign the resulting dictionary to self.metrics_dict
+		self.metrics_dict = dict_metrics
