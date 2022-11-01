@@ -13,17 +13,26 @@ from sklearn.metrics import (
 )
 from sklearn.svm import SVC
 
-# classifier can be ['RF', 'LDA', 'SVC']
-
 
 class Classification:
+    classifiers_map = {
+        "RF": RandomForestClassifier,
+        "LDA": LinearDiscriminantAnalysis,
+        "SVC": SVC,
+    }
+
     def __init__(
         self, train_df, test_df, ground_truth_df, classifier="RF", n_estimators=100
     ):
         self.train_df = train_df
         self.test_df = test_df
         self.ground_truth_df = ground_truth_df
+
+        assert (
+            classifier in self.classifiers_map.keys()
+        ), "Unsupported classifier provided"
         self.classifier = classifier
+
         self.n_estimators = n_estimators
         self.target_col = None
         self.model = None
@@ -154,17 +163,15 @@ class Classification:
         X = self.train_df
         y = self.target_col
 
+        classifier = self.classifiers_map[self.classifier]
+
         if self.classifier == "RF":
-            self.model = RandomForestClassifier(n_estimators=self.n_estimators)
-            self.model.fit(X, y)
+            kwargs = {"n_estimators": self.n_estimators}
+        else:
+            kwargs = {}
 
-        elif self.classifier == "LDA":
-            self.model = LinearDiscriminantAnalysis()
-            self.model.fit(X, y)
-
-        elif self.classifier == "SVC":
-            self.model = SVC()
-            self.model.fit(X, y)
+        self.model = classifier(**kwargs)
+        self.model.fit(X, y)
 
     def gen_pred_df(self):
         preds = self.model.predict(self.test_df)
