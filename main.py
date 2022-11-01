@@ -1,5 +1,6 @@
-from blitzml.tabular import Classification
 import pandas as pd
+
+from blitzml.tabular import Classification
 
 # prepare your dataframes
 train_df = pd.read_csv("auxiliary/data/train.csv")
@@ -7,7 +8,9 @@ test_df = pd.read_csv("auxiliary/data/test.csv")
 ground_truth_df = pd.read_csv("auxiliary/ground_truth.csv")
 
 # create the pipeline with a certain classifier
-auto = Classification(train_df, test_df, ground_truth_df, classifier = 'RF', n_estimators = 50)
+auto = Classification(
+    train_df, test_df, ground_truth_df, classifier="RF", n_estimators=50
+)
 
 # first perform data preprocessing
 auto.preprocess()

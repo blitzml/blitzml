@@ -47,7 +47,7 @@ print(metrics_dict)
 
 ## Available Classifiers
 
-- Random Forest 'RF' 
+- Random Forest 'RF'
 - LinearDiscriminantAnalysis 'LDA'
 - Support Vector Classifier 'SVC'
 
@@ -57,3 +57,11 @@ print(metrics_dict)
 
 
 
+## Development
+
+- Clone the repo
+- run `pip install virtualenv`
+- run `python -m virtualenv venv`
+- run `. ./venv/bin/activate` on UNIX based systems or `. ./venv/Scripts/activate.ps1` if on windows
+- run `pip install -r requirements.txt`
+- run `pre-commit install`
