@@ -39,6 +39,7 @@ class Classification:
         self.pred_df = None
         self.metrics_dict = None
         self.target = None
+        self.columns_hight_corr = None
 
     def preprocess(self):
         train = self.train_df
@@ -153,14 +154,21 @@ class Classification:
             train_n[target] = train_n[target].astype(dt)
         except:
             pass
+        # classify columns by correlation
+        corr_df = train_n.corr()
+        columns_hight_corr = list(corr_df.query(f'{target} >= 0.15 or {target} <= -0.15 ').index)
+        columns_hight_corr.remove(target)
         # assign processed dataframes
         self.train_df = train_n.drop(target, axis=1)
         self.test_df = test_n
         self.target_col = train_n[target]
         self.target = target
+        self.columns_hight_corr = columns_hight_corr
 
     def train_the_model(self):
-        X = self.train_df
+        columns_hight_corr = self.columns_hight_corr
+        # use high correlation columns only in training
+        X = self.train_df[columns_hight_corr]
         y = self.target_col
 
         classifier = self.classifiers_map[self.classifier]
@@ -174,17 +182,17 @@ class Classification:
         self.model.fit(X, y)
 
     def gen_pred_df(self):
-        preds = self.model.predict(self.test_df)
-        localtarget = self.target
+        target = self.target
+        columns_hight_corr = self.columns_hight_corr
+        preds = self.model.predict(self.test_df[columns_hight_corr])
         # columns should be in submission
         ground_truth_columns = list(self.ground_truth_df.columns)
-        ground_truth_columns.remove(localtarget)
+        ground_truth_columns.remove(target)
         # predict submission
         pred_df = self.test_df[ground_truth_columns]
-        pred_df[localtarget] = preds
+        pred_df[target] = preds
         # assign to self.pred_df
         self.pred_df = pred_df
-        # self.pred_df = pd.DataFrame({"PassengerId": self.test_df["PassengerId"].values, "Survived": preds })
 
     def gen_metrics_dict(self):
         # If the user calls this function before gen_pred_df()
