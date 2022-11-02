@@ -39,7 +39,7 @@ class Classification:
         self.pred_df = None
         self.metrics_dict = None
         self.target = None
-        self.columns_hight_corr = None
+        self.columns_high_corr = None
 
     def preprocess(self):
         train = self.train_df
@@ -156,19 +156,19 @@ class Classification:
             pass
         # classify columns by correlation
         corr_df = train_n.corr()
-        columns_hight_corr = list(corr_df.query(f'{target} >= 0.15 or {target} <= -0.15 ').index)
-        columns_hight_corr.remove(target)
+        columns_high_corr = list(corr_df[(corr_df[target] >= 0.15)].index) + list(corr_df[(corr_df[target] <= -0.15)].index)
+        columns_high_corr.remove(target)
         # assign processed dataframes
         self.train_df = train_n.drop(target, axis=1)
         self.test_df = test_n
         self.target_col = train_n[target]
         self.target = target
-        self.columns_hight_corr = columns_hight_corr
+        self.columns_high_corr = columns_high_corr
 
     def train_the_model(self):
-        columns_hight_corr = self.columns_hight_corr
+        columns_high_corr = self.columns_high_corr
         # use high correlation columns only in training
-        X = self.train_df[columns_hight_corr]
+        X = self.train_df[columns_high_corr]
         y = self.target_col
 
         classifier = self.classifiers_map[self.classifier]
@@ -183,8 +183,8 @@ class Classification:
 
     def gen_pred_df(self):
         target = self.target
-        columns_hight_corr = self.columns_hight_corr
-        preds = self.model.predict(self.test_df[columns_hight_corr])
+        columns_high_corr = self.columns_high_corr
+        preds = self.model.predict(self.test_df[columns_high_corr])
         # columns should be in submission
         ground_truth_columns = list(self.ground_truth_df.columns)
         ground_truth_columns.remove(target)
