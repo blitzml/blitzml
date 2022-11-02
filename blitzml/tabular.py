@@ -184,7 +184,6 @@ class Classification:
         pred_df[localtarget] = preds
         # assign to self.pred_df
         self.pred_df = pred_df
-        # self.pred_df = pd.DataFrame({"PassengerId": self.test_df["PassengerId"].values, "Survived": preds })
 
     def gen_metrics_dict(self):
         # If the user calls this function before gen_pred_df()
