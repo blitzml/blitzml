@@ -1,4 +1,3 @@
-import joblib
 import numpy as np
 import pandas as pd
 from sklearn import preprocessing
@@ -15,15 +14,19 @@ from sklearn.svm import SVC
 
 
 class Classification:
+    """
+    Parameters:
+        :param kwargs: is the classifier arguments
+    """
+
     classifiers_map = {
         "RF": RandomForestClassifier,
         "LDA": LinearDiscriminantAnalysis,
         "SVC": SVC,
     }
 
-    def __init__(
-        self, train_df, test_df, ground_truth_df, classifier="RF", n_estimators=100
-    ):
+    def __init__(self, train_df, test_df, ground_truth_df, classifier="RF", **kwargs):
+        self.kwargs = kwargs
         self.train_df = train_df
         self.test_df = test_df
         self.ground_truth_df = ground_truth_df
@@ -33,7 +36,6 @@ class Classification:
         ), "Unsupported classifier provided"
         self.classifier = classifier
 
-        self.n_estimators = n_estimators
         self.target_col = None
         self.model = None
         self.pred_df = None
@@ -156,7 +158,9 @@ class Classification:
             pass
         # classify columns by correlation
         corr_df = train_n.corr()
-        columns_high_corr = list(corr_df[(corr_df[target] >= 0.15)].index) + list(corr_df[(corr_df[target] <= -0.15)].index)
+        columns_high_corr = list(corr_df[(corr_df[target] >= 0.15)].index) + list(
+            corr_df[(corr_df[target] <= -0.15)].index
+        )
         columns_high_corr.remove(target)
         # assign processed dataframes
         self.train_df = train_n.drop(target, axis=1)
@@ -172,13 +176,7 @@ class Classification:
         y = self.target_col
 
         classifier = self.classifiers_map[self.classifier]
-
-        if self.classifier == "RF":
-            kwargs = {"n_estimators": self.n_estimators}
-        else:
-            kwargs = {}
-
-        self.model = classifier(**kwargs)
+        self.model = classifier(**self.kwargs)
         self.model.fit(X, y)
 
     def gen_pred_df(self):
@@ -199,9 +197,9 @@ class Classification:
         if self.pred_df.empty:
             self.gen_pred_df()
 
-        localtarget = self.target
-        x = self.ground_truth_df[localtarget]
-        y = self.pred_df[localtarget]
+        local_target = self.target
+        x = self.ground_truth_df[local_target]
+        y = self.pred_df[local_target]
         acc = accuracy_score(x, y)
         f1 = f1_score(x, y)
         pre = precision_score(x, y)
