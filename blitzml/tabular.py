@@ -1,5 +1,7 @@
+import sys
 import numpy as np
 import pandas as pd
+import importlib.util
 from sklearn import preprocessing
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.ensemble import RandomForestClassifier
@@ -25,23 +27,51 @@ class Classification:
         "SVC": SVC,
     }
 
-    def __init__(self, train_df, test_df, ground_truth_df, classifier="RF", **kwargs):
+    def __init__(self,
+                 train_df,
+                 test_df,
+                 ground_truth_df,
+                 classifier="RF",
+                 class_name = "None",
+                 file_path = "None",
+                 **kwargs):
+
         self.kwargs = kwargs
         self.train_df = train_df
         self.test_df = test_df
         self.ground_truth_df = ground_truth_df
 
-        assert (
-            classifier in self.classifiers_map.keys()
-        ), "Unsupported classifier provided"
-        self.classifier = classifier
+        if classifier == 'custom':
+            self.classifier = classifier
+        else:
+            assert (
+                classifier in self.classifiers_map.keys()
+            ), "Unsupported classifier provided"
+            self.classifier = classifier
 
+        self.class_name = class_name
+        self.file_path = file_path
         self.target_col = None
         self.model = None
         self.pred_df = None
         self.metrics_dict = None
         self.target = None
         self.columns_high_corr = None
+
+
+    def get_custom_classifier(self):
+        assert(
+                self.class_name != "None" and self.file_path != "None"
+            ), "Didn't provide the custom classifier arguments!"
+
+        # load module using a class_name and a file_path
+        spec = importlib.util.spec_from_file_location(self.class_name, self.file_path)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[self.class_name] = module
+        spec.loader.exec_module(module)
+
+        # returns the class from the loaded module
+        return module.__dict__[self.class_name] 
 
     def preprocess(self):
         train = self.train_df
@@ -175,9 +205,14 @@ class Classification:
         X = self.train_df[columns_high_corr]
         y = self.target_col
 
-        classifier = self.classifiers_map[self.classifier]
-        self.model = classifier(**self.kwargs)
-        self.model.fit(X, y)
+        if self.classifier == "custom":
+            classifier = self.get_custom_classifier()
+            self.model = classifier(**self.kwargs)
+            self.model.fit(X, y)
+        else:
+            classifier = self.classifiers_map[self.classifier]
+            self.model = classifier(**self.kwargs)
+            self.model.fit(X, y)
 
     def gen_pred_df(self):
         target = self.target
