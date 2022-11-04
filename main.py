@@ -12,7 +12,7 @@ auto = Classification(
     train_df,
     test_df,
     ground_truth_df,
-    classifier="custom",
+    classifier="RF",
     class_name = "classifier",
     file_path = "auxiliary/scripts/dummy.py",
     # n_estimators=50

@@ -188,10 +188,13 @@ class Classification:
             pass
         # classify columns by correlation
         corr_df = train_n.corr()
-        columns_high_corr = list(corr_df[(corr_df[target] >= 0.15)].index) + list(
-            corr_df[(corr_df[target] <= -0.15)].index
+        # drop target raw 
+        corr_df.drop(index=target,axis=0,inplace=True)
+        # calculate corelation ref
+        corr_ref = round(np.percentile(abs(corr_df[target]),33),4)
+        columns_high_corr = list(corr_df[(corr_df[target] >= corr_ref)].index) + list(
+            corr_df[(corr_df[target] <= -corr_ref)].index
         )
-        columns_high_corr.remove(target)
         # assign processed dataframes
         self.train_df = train_n.drop(target, axis=1)
         self.test_df = test_n
