@@ -12,16 +12,16 @@ pip install blitzml
 ```
 
 
-## Usage
+## Quick Usage
 
 ```python
 from blitzml.tabular import Classification
 import pandas as pd
 
 # prepare your dataframes
-train_df = pd.read_csv("auxiliary/data/train.csv")
-test_df = pd.read_csv("auxiliary/data/test.csv")
-ground_truth_df = pd.read_csv("auxiliary/ground_truth.csv")
+train_df = pd.read_csv("auxiliary/datasets/banknote/train.csv")
+test_df = pd.read_csv("auxiliary/datasets/banknote/test.csv")
+ground_truth_df = pd.read_csv("auxiliary/datasets/banknote/ground_truth.csv")
 
 # create the pipeline with a certain classifier
 auto = Classification(train_df, test_df, ground_truth_df, classifier = 'RF', n_estimators = 50)
@@ -51,11 +51,27 @@ print(metrics_dict)
 - LinearDiscriminantAnalysis 'LDA'
 - Support Vector Classifier 'SVC'
 
-`When using RF you can also provide the number of estimators`
+`The possible arguments for each model can be found in the `[sklearn docs](https://scikit-learn.org/stable/user_guide.html)
 
-`via n_estimators = 100 (default)`
+## Working with a custom classifier
 
+```python
+# create the pipeline with a custom classifier
+# instead of specifying a classifier name we pass "custom" to the classifier argument.
+auto = Classification(
+    train_df,
+    test_df,
+    ground_truth_df,
+    classifier="custom", 
+    class_name = "classifier",
+    file_path = "auxiliary/scripts/dummy.py"
+)
+```
+## Smart Feature Selection
 
+```python
+
+```
 
 ## Development
 
