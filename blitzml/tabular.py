@@ -255,3 +255,11 @@ class Classification:
 
         # assign the resulting dictionary to self.metrics_dict
         self.metrics_dict = dict_metrics
+    
+    # run funstion
+    def run(self):
+        Classification.preprocess(self)
+        Classification.train_the_model(self)
+        Classification.gen_pred_df(self)
+        Classification.gen_metrics_dict(self)
+
