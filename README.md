@@ -1,7 +1,7 @@
 
 # blitzml
 
-Automate machine learning piplines rapidly
+Automate machine learning pipelines rapidly
 
 
 ## How to install
@@ -12,7 +12,7 @@ pip install blitzml
 ```
 
 
-## Quick Usage
+## Usage
 
 ```python
 from blitzml.tabular import Classification
@@ -23,7 +23,7 @@ train_df = pd.read_csv("auxiliary/datasets/banknote/train.csv")
 test_df = pd.read_csv("auxiliary/datasets/banknote/test.csv")
 ground_truth_df = pd.read_csv("auxiliary/datasets/banknote/ground_truth.csv")
 
-# create the pipeline with a certain classifier
+# create the pipeline
 auto = Classification(train_df, test_df, ground_truth_df, classifier = 'RF', n_estimators = 50)
 
 # first perform data preprocessing
@@ -32,11 +32,11 @@ auto.preprocess()
 auto.train_the_model()
 
 
-# After training the model we can generate the following:
+# After training the model we can generate:
 auto.gen_pred_df()
 auto.gen_metrics_dict()
 
-# Then you can get their values using:
+# We can get their values using:
 pred_df = auto.pred_df
 metrics_dict = auto.metrics_dict
 
@@ -50,19 +50,25 @@ print(metrics_dict)
 - Random Forest 'RF'
 - LinearDiscriminantAnalysis 'LDA'
 - Support Vector Classifier 'SVC'
+- KNeighborsClassifier 'KNN'
+- GaussianNB 'GNB'
+- LogisticRegression 'LR'
+- AdaBoostClassifier 'AB'
+- GradientBoostingClassifier 'GB'
+- DecisionTreeClassifier 'DT'
+- MLPClassifier 'MLP'
 
-`The possible arguments for each model can be found in the `[sklearn docs](https://scikit-learn.org/stable/user_guide.html)
+The possible arguments for each model can be found in the [sklearn docs](https://scikit-learn.org/stable/user_guide.html)
 
 ## Working with a custom classifier
 
 ```python
-# create the pipeline with a custom classifier
-# instead of specifying a classifier name we pass "custom" to the classifier argument.
+# instead of specifying a classifier name, we pass "custom" to the classifier argument.
 auto = Classification(
     train_df,
     test_df,
     ground_truth_df,
-    classifier="custom", 
+    classifier = "custom", 
     class_name = "classifier",
     file_path = "auxiliary/scripts/dummy.py"
 )
@@ -71,6 +77,25 @@ auto = Classification(
 
 ```python
 
+```
+## Additional features
+### • Preprocessing a dataset
+```python
+# After executing
+auto.preprocess()
+# You can access the processed datasets via
+processed_train_df = auto.train_df
+processed_test_df = auto.test_df
+```
+### • Less coding
+```python
+# Instead of
+auto.preprocess()
+auto.train_the_model()
+auto.gen_pred_df()
+auto.gen_metrics_dict()
+# You can simply use
+auto.run()
 ```
 
 ## Development

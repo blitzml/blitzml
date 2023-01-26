@@ -7,22 +7,18 @@ train_df = pd.read_csv("auxiliary/datasets/banknote/train.csv")
 test_df = pd.read_csv("auxiliary/datasets/banknote/test.csv")
 ground_truth_df = pd.read_csv("auxiliary/datasets/banknote/ground_truth.csv")
 
-# create the pipeline with a certain classifier
+# create the pipeline
 auto = Classification(
     train_df,
     test_df,
     ground_truth_df,
-    classifier="RF",
-    class_name = "classifier",
-    file_path = "auxiliary/scripts/dummy.py",
-    # n_estimators=50
+    classifier="RF"
 )
 
 # first perform data preprocessing
 auto.preprocess()
 # second train the model
 auto.train_the_model()
-
 
 # After training the model we can generate the following:
 auto.gen_pred_df()

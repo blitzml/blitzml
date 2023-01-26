@@ -3,8 +3,6 @@ import numpy as np
 import pandas as pd
 import importlib.util
 from sklearn import preprocessing
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import (
     accuracy_score,
     confusion_matrix,
@@ -13,7 +11,13 @@ from sklearn.metrics import (
     recall_score,
 )
 from sklearn.svm import SVC
-
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.linear_model import LogisticRegression
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, GradientBoostingClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neural_network import MLPClassifier
 
 class Classification:
     """
@@ -25,6 +29,13 @@ class Classification:
         "RF": RandomForestClassifier,
         "LDA": LinearDiscriminantAnalysis,
         "SVC": SVC,
+        "KNN": KNeighborsClassifier,
+        "GNB": GaussianNB,
+        "LR": LogisticRegression,
+        "AB": AdaBoostClassifier,
+        "GB": GradientBoostingClassifier,
+        "DT": DecisionTreeClassifier,
+        "MLP": MLPClassifier
     }
 
     def __init__(self,
@@ -35,11 +46,10 @@ class Classification:
                  class_name = "None",
                  file_path = "None",
                  **kwargs):
-
-        self.kwargs = kwargs
         self.train_df = train_df
         self.test_df = test_df
         self.ground_truth_df = ground_truth_df
+        assert (not (self.train_df.empty) and not (self.test_df.empty) and not (self.ground_truth_df.empty))
 
         if classifier == 'custom':
             self.classifier = classifier
@@ -51,6 +61,7 @@ class Classification:
 
         self.class_name = class_name
         self.file_path = file_path
+        self.kwargs = kwargs
         self.target_col = None
         self.model = None
         self.pred_df = None
@@ -74,8 +85,8 @@ class Classification:
         return module.__dict__[self.class_name] 
 
     def preprocess(self):
-        train = self.train_df
-        test = self.test_df
+        train = self.train_df.copy()
+        test = self.test_df.copy()
         # drop duplicates
         train.drop_duplicates(inplace=True)
         # drop raws if contains null data in column have greater than 95% valid data (from train only)
@@ -207,15 +218,13 @@ class Classification:
         # use high correlation columns only in training
         X = self.train_df[columns_high_corr]
         y = self.target_col
-
         if self.classifier == "custom":
             classifier = self.get_custom_classifier()
-            self.model = classifier(**self.kwargs)
-            self.model.fit(X, y)
         else:
             classifier = self.classifiers_map[self.classifier]
-            self.model = classifier(**self.kwargs)
-            self.model.fit(X, y)
+
+        self.model = classifier(**self.kwargs)
+        self.model.fit(X, y)
 
     def gen_pred_df(self):
         target = self.target
@@ -256,10 +265,10 @@ class Classification:
         # assign the resulting dictionary to self.metrics_dict
         self.metrics_dict = dict_metrics
     
-    # run funstion
+    # run function
     def run(self):
-        Classification.preprocess(self)
-        Classification.train_the_model(self)
-        Classification.gen_pred_df(self)
-        Classification.gen_metrics_dict(self)
+        self.preprocess()
+        self.train_the_model()
+        self.gen_pred_df()
+        self.gen_metrics_dict()
 
