@@ -6,6 +6,16 @@ train_df = pd.read_csv("auxiliary/datasets/banknote/train.csv")
 test_df = pd.read_csv("auxiliary/datasets/banknote/test.csv")
 ground_truth_df = pd.read_csv("auxiliary/datasets/banknote/ground_truth.csv")
 
+def test_train_dataset_without_target_column_fail():
+    with pytest.raises(AssertionError):
+        auto = Classification(
+            train_df.drop('class', axis = 1),
+            test_df,
+            ground_truth_df,
+            classifier='RF'
+            )
+        auto.run()
+    
 def test_classifiers():
     classifier_list = ["RF","LDA","SVC","KNN","GNB","LR","AB","GB","DT","MLP"]
     for classifier in classifier_list:
@@ -16,6 +26,7 @@ def test_classifiers():
             classifier=classifier
             )
         auto.run()
+        assert auto.metrics_dict['Accuracy'] > 0
 
 def test_using_different_datasets():
     datasets = ['titanic', 'banknote']
@@ -30,6 +41,7 @@ def test_using_different_datasets():
             classifier='RF'
             )
         auto.run()
+        assert auto.metrics_dict['Accuracy'] > 0
 
 def test_using_custom_classifier():
     auto = Classification(
@@ -41,6 +53,7 @@ def test_using_custom_classifier():
         file_path = "auxiliary/scripts/dummy.py",
         )
     auto.run()
+    assert auto.metrics_dict['Accuracy'] > 0
 
 def test_using_wrong_custom_classifier_fails():
     with pytest.raises(KeyError):
@@ -65,6 +78,7 @@ def test_using_wrong_custom_classifier_file_path_fails():
             file_path = "auxiliary/scripts/daaa.py",
             )
         auto.run()
+
 def test_using_unsupported_classifier_fails():
     with pytest.raises(AssertionError):
         auto = Classification(
@@ -85,6 +99,7 @@ def test_using_empty_train_df_fails():
             classifier='RF'
             )
         auto.run()
+
 def test_using_empty_test_df_fails():
     with pytest.raises(AssertionError):
         test_df = pd.DataFrame()

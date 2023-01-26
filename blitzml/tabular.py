@@ -98,9 +98,11 @@ class Classification:
             null_index = list(train[train[colmn].isnull()].index)
             train.drop(index=null_index, axis=0, inplace=True)
         # get target data (column name,dtype,save values in list)
+        target = None
         for col in train.columns:
             if col not in test.columns:
                 target = col
+        assert (target != None), 'train_df does not contain target column'
         # get dtype
         dtype = train.dtypes.to_frame()
         dtype["column"] = dtype.index
