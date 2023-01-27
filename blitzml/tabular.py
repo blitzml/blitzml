@@ -18,6 +18,7 @@ from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, GradientBoostingClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neural_network import MLPClassifier
+from boruta import BorutaPy
 
 class Classification:
     """
@@ -45,6 +46,7 @@ class Classification:
                  classifier="RF",
                  class_name = "None",
                  file_path = "None",
+                 feature_selection = "None",
                  **kwargs):
         self.train_df = train_df
         self.test_df = test_df
@@ -68,6 +70,14 @@ class Classification:
         self.metrics_dict = None
         self.target = None
         self.columns_high_corr = None
+        self.important_columns =None
+        self.used_columns = None
+
+        if feature_selection in ['correlation','importance']:
+            self.feature_selection = feature_selection
+        else:
+            self.feature_selection = None
+
 
 
     def get_custom_classifier(self):
@@ -199,6 +209,15 @@ class Classification:
             train_n[target] = train_n[target].astype(dt)
         except:
             pass
+        # assign processed dataframes
+        self.train_df = train_n.drop(target, axis=1)
+        self.test_df = test_n
+        self.target_col = train_n[target]
+        self.target = target
+
+    def select_high_correlation(self):
+        train_n = self.train_df
+        target = self.target
         # classify columns by correlation
         corr_df = train_n.corr()
         # drop target raw 
@@ -208,17 +227,35 @@ class Classification:
         columns_high_corr = list(corr_df[(corr_df[target] >= corr_ref)].index) + list(
             corr_df[(corr_df[target] <= -corr_ref)].index
         )
-        # assign processed dataframes
-        self.train_df = train_n.drop(target, axis=1)
-        self.test_df = test_n
-        self.target_col = train_n[target]
-        self.target = target
         self.columns_high_corr = columns_high_corr
 
+    def select_important_features(self):
+        train = self.train_df
+        target_col = self.target_col
+        model = RandomForestClassifier(random_state=0)
+        # define Boruta feature selection method
+        feat_selector = BorutaPy(model, n_estimators='auto', verbose=2, random_state=1)
+        # find all relevant features
+        feat_selector.fit(train.values, target_col.values)
+        cols = list(train.columns)
+        importance = list(feat_selector.support_)
+        important_columns = []
+        for i in range(len(importance)):
+            if importance[i]==True:
+                important_columns.append(cols[i])
+        self.important_columns = important_columns
+
     def train_the_model(self):
-        columns_high_corr = self.columns_high_corr
+        if self.feature_selection == 'correlation':
+            self.select_high_correlation()
+            self.used_columns = self.columns_high_corr
+        elif self.feature_selection == 'importance':
+            self.select_important_features()
+            self.used_columns = self.important_columns
+        elif self.feature_selection == None:
+            self.used_columns = list(self.train_df.columns)
         # use high correlation columns only in training
-        X = self.train_df[columns_high_corr]
+        X = self.train_df[self.used_columns]
         y = self.target_col
         if self.classifier == "custom":
             classifier = self.get_custom_classifier()
@@ -230,8 +267,7 @@ class Classification:
 
     def gen_pred_df(self):
         target = self.target
-        columns_high_corr = self.columns_high_corr
-        preds = self.model.predict(self.test_df[columns_high_corr])
+        preds = self.model.predict(self.test_df[self.used_columns])
         # columns should be in submission
         ground_truth_columns = list(self.ground_truth_df.columns)
         ground_truth_columns.remove(target)
