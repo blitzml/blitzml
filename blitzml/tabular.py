@@ -218,6 +218,7 @@ class Classification:
     def select_high_correlation(self):
         train_n = self.train_df
         target = self.target
+        train_n[target] = self.target_col
         # classify columns by correlation
         corr_df = train_n.corr()
         # drop target raw 
