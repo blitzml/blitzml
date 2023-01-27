@@ -70,13 +70,27 @@ auto = Classification(
     ground_truth_df,
     classifier = "custom", 
     class_name = "classifier",
-    file_path = "auxiliary/scripts/dummy.py"
+    file_path = "auxiliary/scripts/dummy.py",
+    feature_selection = "importance"
 )
 ```
 ## Smart Feature Selection
 
 ```python
-
+# to filter used columns by correlation with target column
+auto = Classification(
+    '''
+    params
+    '''
+    feature_selection = "correlation"
+)
+# to filter used columns by feature importance (boruta)
+auto = Classification(
+    '''
+    params
+    '''
+    feature_selection = "importance"
+)
 ```
 ## Additional features
 ### • Preprocessing a dataset
