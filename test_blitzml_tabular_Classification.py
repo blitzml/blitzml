@@ -6,6 +6,19 @@ train_df = pd.read_csv("auxiliary/datasets/banknote/train.csv")
 test_df = pd.read_csv("auxiliary/datasets/banknote/test.csv")
 ground_truth_df = pd.read_csv("auxiliary/datasets/banknote/ground_truth.csv")
 
+
+def test_different_feature_selection_modes():
+    modes = ["importance", "correlation", "None"]
+    for mode in modes:
+        auto = Classification(
+            train_df,
+            test_df,
+            ground_truth_df,
+            classifier='RF',
+            feature_selection = mode
+            )
+        auto.run()
+        assert auto.metrics_dict['Accuracy'] > 0    
 def test_train_dataset_without_target_column_fail():
     with pytest.raises(AssertionError):
         auto = Classification(

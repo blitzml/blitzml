@@ -73,7 +73,7 @@ class Classification:
         self.important_columns =None
         self.used_columns = None
 
-        if feature_selection in ['correlation','importance']:
+        if feature_selection in ['correlation', 'importance']:
             self.feature_selection = feature_selection
         else:
             self.feature_selection = None
@@ -234,7 +234,7 @@ class Classification:
         target_col = self.target_col
         model = RandomForestClassifier(random_state=0)
         # define Boruta feature selection method
-        feat_selector = BorutaPy(model, n_estimators='auto', verbose=2, random_state=1)
+        feat_selector = BorutaPy(model, n_estimators='auto', verbose=0, random_state=1)
         # find all relevant features
         feat_selector.fit(train.values, target_col.values)
         cols = list(train.columns)

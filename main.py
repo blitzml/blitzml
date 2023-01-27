@@ -12,7 +12,8 @@ auto = Classification(
     train_df,
     test_df,
     ground_truth_df,
-    classifier="RF"
+    classifier="RF",
+    feature_selection = "correlation"
 )
 
 # first perform data preprocessing

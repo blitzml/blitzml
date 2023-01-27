@@ -1,6 +1,8 @@
 black==22.10.0
+Boruta==0.3
 cfgv==3.3.1
 click==8.1.3
+colorama==0.4.6
 distlib==0.3.6
 filelock==3.8.0
 identify==2.5.8
