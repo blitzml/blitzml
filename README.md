@@ -91,6 +91,13 @@ auto = Classification(
     '''
     feature_selection = "importance"
 )
+# to use all columns
+auto = Classification(
+    '''
+    params
+    '''
+    feature_selection = "None"
+)
 ```
 ## Additional features
 ### • Preprocessing a dataset
