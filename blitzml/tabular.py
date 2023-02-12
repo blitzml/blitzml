@@ -42,16 +42,15 @@ class Classification:
     def __init__(self,
                  train_df,
                  test_df,
-                 ground_truth_df,
                  classifier="RF",
                  class_name = "None",
                  file_path = "None",
                  feature_selection = "None",
+                 validation_percentage = 0.1,
                  **kwargs):
         self.train_df = train_df
         self.test_df = test_df
-        self.ground_truth_df = ground_truth_df
-        assert (not (self.train_df.empty) and not (self.test_df.empty) and not (self.ground_truth_df.empty))
+        assert (not (self.train_df.empty) and not (self.test_df.empty))
 
         if classifier == 'custom':
             self.classifier = classifier
@@ -72,6 +71,8 @@ class Classification:
         self.columns_high_corr = None
         self.important_columns =None
         self.used_columns = None
+        self.validation_percentage = validation_percentage
+        self.validation_df = None
 
         if feature_selection in ['correlation', 'importance']:
             self.feature_selection = feature_selection
@@ -209,10 +210,15 @@ class Classification:
             train_n[target] = train_n[target].astype(dt)
         except:
             pass
+        # split for validation
+        validation_percentage = self.validation_percentage
+        validation_index = int(len(train) * (1-validation_percentage))
         # assign processed dataframes
-        self.train_df = train_n.drop(target, axis=1)
+        self.train_df = train_n.iloc[:validation_index,:].drop(target, axis=1)
+        self.validation_df = train_n.iloc[validation_index:,:].drop(target, axis=1)
         self.test_df = test_n
-        self.target_col = train_n[target]
+        self.target_col = train_n.iloc[:validation_index,:][target]
+        self.true_values = train_n.iloc[validation_index:,:][target]
         self.target = target
 
     def select_high_correlation(self):
@@ -266,32 +272,32 @@ class Classification:
         self.model = classifier(**self.kwargs)
         self.model.fit(X, y)
 
-    def gen_pred_df(self):
+    def gen_pred_df(self, df):
+        istest=False
         target = self.target
-        preds = self.model.predict(self.test_df[self.used_columns])
-        # columns should be in submission
-        ground_truth_columns = list(self.ground_truth_df.columns)
-        ground_truth_columns.remove(target)
-        # predict submission
-        pred_df = self.test_df[ground_truth_columns]
-        pred_df[target] = preds
-        # assign to self.pred_df
-        self.pred_df = pred_df
+        if df is self.test_df:
+            istest=True
+        preds = self.model.predict(df[self.used_columns])
+        df[target] = preds
+        # assign to self.pred_df only if inputs the test df
+        if istest:
+            self.pred_df = df
+        else: # if input is validation
+            return df
 
     def gen_metrics_dict(self):
         # If the user calls this function before gen_pred_df()
-        if self.pred_df.empty:
-            self.gen_pred_df()
+        predected = self.gen_pred_df(self.validation_df)
 
         local_target = self.target
-        x = self.ground_truth_df[local_target]
-        y = self.pred_df[local_target]
-        acc = accuracy_score(x, y)
-        f1 = f1_score(x, y)
-        pre = precision_score(x, y)
-        recall = recall_score(x, y)
+        x = self.true_values
+        y = predected[local_target]
+        acc = round(accuracy_score(x, y),2)
+        f1 = round(f1_score(x, y),2)
+        pre = round(precision_score(x, y),2)
+        recall = round(recall_score(x, y),2)
         tn, fp, fn, tp = confusion_matrix(x, y).ravel()
-        specificity = tn / (tn + fp)
+        specificity = round(tn / (tn + fp),2)
 
         dict_metrics = {
             "Accuracy": acc,
@@ -308,6 +314,7 @@ class Classification:
     def run(self):
         self.preprocess()
         self.train_the_model()
-        self.gen_pred_df()
+        self.gen_pred_df(self.test_df)
         self.gen_metrics_dict()
+
 
