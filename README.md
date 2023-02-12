@@ -21,10 +21,9 @@ import pandas as pd
 # prepare your dataframes
 train_df = pd.read_csv("auxiliary/datasets/banknote/train.csv")
 test_df = pd.read_csv("auxiliary/datasets/banknote/test.csv")
-ground_truth_df = pd.read_csv("auxiliary/datasets/banknote/ground_truth.csv")
 
 # create the pipeline
-auto = Classification(train_df, test_df, ground_truth_df, classifier = 'RF', n_estimators = 50)
+auto = Classification(train_df, test_df, classifier = 'RF', n_estimators = 50)
 
 # first perform data preprocessing
 auto.preprocess()
@@ -33,7 +32,7 @@ auto.train_the_model()
 
 
 # After training the model we can generate:
-auto.gen_pred_df()
+auto.gen_pred_df(auto.test_df)
 auto.gen_metrics_dict()
 
 # We can get their values using:
@@ -67,11 +66,9 @@ The possible arguments for each model can be found in the [sklearn docs](https:/
 auto = Classification(
     train_df,
     test_df,
-    ground_truth_df,
     classifier = "custom", 
     class_name = "classifier",
-    file_path = "auxiliary/scripts/dummy.py",
-    feature_selection = "importance"
+    file_path = "auxiliary/scripts/dummy.py"
 )
 ```
 ## Smart Feature Selection
@@ -82,23 +79,13 @@ auto = Classification(
     '''
     params
     '''
-    feature_selection = "correlation"
-)
-# to filter used columns by feature importance (boruta)
-auto = Classification(
-    '''
-    params
-    '''
-    feature_selection = "importance"
-)
-# to use all columns
-auto = Classification(
-    '''
-    params
-    '''
-    feature_selection = "None"
+    feature_selection = "correlation" # or "importance" or "none"
 )
 ```
+- Options:
+    - "correlation": use feature columns with the highest correlation with the target
+    - "importance": use feature columns that are important for the model to predict the target
+    - "none": use all feature columns
 ## Additional features
 ### • Preprocessing a dataset
 ```python
@@ -107,6 +94,24 @@ auto.preprocess()
 # You can access the processed datasets via
 processed_train_df = auto.train_df
 processed_test_df = auto.test_df
+```
+### • Validation split
+```python
+auto = Classification(
+    '''
+    params
+    '''
+    validation_percentage = 0.1 #default
+)
+```
+### • Multiclass metrics averaging type
+```python
+auto = Classification(
+    '''
+    params
+    '''
+    average_type = 'macro' #default
+)
 ```
 ### • Less coding
 ```python
