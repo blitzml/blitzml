@@ -261,15 +261,26 @@ class Classification:
                 important_columns.append(cols[i])
         self.important_columns = important_columns
 
+    def used_cols(self):
+        if self.feature_selection == 'correlation':
+            self.select_high_correlation()
+            self.used_columns = self.columns_high_corr
+        elif self.feature_selection == 'importance':
+            self.select_important_features()
+            self.used_columns = self.important_columns
+        elif self.feature_selection == None:
+            self.used_columns = list(self.train_df.columns)
+
     def favorable_classifier(self):
+        x_train = self.train_df[self.used_columns]
+        y_train  = self.target_col
         results = pd.DataFrame(columns=["Classifier", "Avg_Accuracy", "Avg_F1_Score"])
         for name, clf in self.classifiers_map.items():
-            model = clf
+            model = clf()
             cv_results = cross_validate(
-                model, self.train_df[self.used_columns], self.target_col , cv=10,
+                model, x_train , y_train , cv=10,
                 scoring=(['accuracy', 'f1'])
             )
-
             results = results.append({
                 "Classifier": name,
                 "Avg_Accuracy": cv_results['test_accuracy'].mean(),
@@ -281,14 +292,7 @@ class Classification:
         return self.classifiers_map[results.iloc[0,:]['Classifier']]
 
     def train_the_model(self):
-        if self.feature_selection == 'correlation':
-            self.select_high_correlation()
-            self.used_columns = self.columns_high_corr
-        elif self.feature_selection == 'importance':
-            self.select_important_features()
-            self.used_columns = self.important_columns
-        elif self.feature_selection == None:
-            self.used_columns = list(self.train_df.columns)
+        self.used_cols()
         # use high correlation columns only in training
         X = self.train_df[self.used_columns]
         y = self.target_col
@@ -335,11 +339,11 @@ class Classification:
             h_loss = hamming_loss(y_true, y_pred)
 
         dict_metrics = {
-            "Accuracy": acc,
-            "f1": f1,
-            "Precision": pre,
-            "Recall": recall,
-            "hamming_loss": h_loss,
+            "Accuracy": round(acc,2),
+            "f1": round(f1,2),
+            "Precision": round(pre,2),
+            "Recall": round(recall,2),
+            "hamming_loss": round(h_loss,2),
         }
         self.metrics_dict = dict_metrics
     
