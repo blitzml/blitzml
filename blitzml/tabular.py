@@ -260,7 +260,7 @@ class Classification:
                 important_columns.append(cols[i])
         self.important_columns = important_columns
 
-    def train_the_model(self):
+    def used_cols(self):
         if self.feature_selection == 'correlation':
             self.select_high_correlation()
             self.used_columns = self.columns_high_corr
@@ -269,6 +269,9 @@ class Classification:
             self.used_columns = self.important_columns
         elif self.feature_selection == None:
             self.used_columns = list(self.train_df.columns)
+
+    def train_the_model(self):
+        self.used_cols()
         # use high correlation columns only in training
         X = self.train_df[self.used_columns]
         y = self.target_col
