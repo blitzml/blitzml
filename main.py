@@ -1,18 +1,16 @@
 import pandas as pd
-
 from blitzml.tabular import Classification
 
 # prepare your dataframes
-train_df = pd.read_csv("auxiliary/datasets/banknote/train.csv")
-test_df = pd.read_csv("auxiliary/datasets/banknote/test.csv")
-ground_truth_df = pd.read_csv("auxiliary/datasets/banknote/ground_truth.csv")
+dataset = 'titanic'
+train_df = pd.read_csv(f"auxiliary/datasets/{dataset}/train.csv")
+test_df = pd.read_csv(f"auxiliary/datasets/{dataset}/test.csv")
 
 # create the pipeline
 auto = Classification(
     train_df,
     test_df,
-    ground_truth_df,
-    classifier="RF",
+    classifier="MLP",
     feature_selection = "correlation"
 )
 
@@ -22,7 +20,7 @@ auto.preprocess()
 auto.train_the_model()
 
 # After training the model we can generate the following:
-auto.gen_pred_df()
+auto.gen_pred_df(auto.test_df)
 auto.gen_metrics_dict()
 
 # Then you can get their values using:

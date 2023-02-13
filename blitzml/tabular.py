@@ -5,7 +5,7 @@ import importlib.util
 from sklearn import preprocessing
 from sklearn.metrics import (
     accuracy_score,
-    confusion_matrix,
+    hamming_loss,
     f1_score,
     precision_score,
     recall_score,
@@ -46,8 +46,9 @@ class Classification:
                  classifier="RF",
                  class_name = "None",
                  file_path = "None",
-                 feature_selection = "None",
+                 feature_selection = "none",
                  validation_percentage = 0.1,
+                 average_type = 'macro',
                  **kwargs):
         self.train_df = train_df
         self.test_df = test_df
@@ -69,11 +70,14 @@ class Classification:
         self.pred_df = None
         self.metrics_dict = None
         self.target = None
+        self.target_class_map = {}
         self.columns_high_corr = None
         self.important_columns =None
         self.used_columns = None
         self.validation_percentage = validation_percentage
+        assert (self.validation_percentage<=0.9), "Validation % must be <=0.9"
         self.validation_df = None
+        self.average_type = average_type
 
         if feature_selection in ['correlation', 'importance']:
             self.feature_selection = feature_selection
@@ -211,9 +215,13 @@ class Classification:
             train_n[target] = train_n[target].astype(dt)
         except:
             pass
+        # encode target column values
+        for i, label in enumerate(train_n[target].unique()):
+            self.target_class_map[label] = i
+        train_n[target].replace(to_replace = self.target_class_map, inplace = True)
         # split for validation
         validation_percentage = self.validation_percentage
-        validation_index = int(len(train) * (1-validation_percentage))
+        validation_index = int(len(train) * (1 - validation_percentage))
         # assign processed dataframes
         self.train_df = train_n.iloc[:validation_index,:].drop(target, axis=1)
         self.validation_df = train_n.iloc[validation_index:,:].drop(target, axis=1)
@@ -229,7 +237,7 @@ class Classification:
         # classify columns by correlation
         corr_df = train_n.corr()
         # drop target raw 
-        corr_df.drop(index=target,axis=0,inplace=True)
+        corr_df.drop(index=target,axis=0, inplace=True)
         # calculate corelation ref
         corr_ref = round(np.percentile(abs(corr_df[target]),33),4)
         columns_high_corr = list(corr_df[(corr_df[target] >= corr_ref)].index) + list(
@@ -295,44 +303,46 @@ class Classification:
         self.model.fit(X, y)
 
     def gen_pred_df(self, df):
-        istest=False
-        target = self.target
-        if df is self.test_df:
-            istest=True
         preds = self.model.predict(df[self.used_columns])
-        df[target] = preds
+        df[self.target] = preds
         # assign to self.pred_df only if inputs the test df
-        if istest:
-            self.pred_df = df
+        if df is self.test_df:
+            # reverse class mapping
+            rev_class_map = dict((v,k) for k,v in self.target_class_map.items())
+            df[self.target].replace(to_replace = rev_class_map, inplace = True)
+            self.pred_df = df 
         else: # if input is validation
             return df
 
     def gen_metrics_dict(self):
-        # If the user calls this function before gen_pred_df()
         predected = self.gen_pred_df(self.validation_df)
-
-        local_target = self.target
-        x = self.true_values
-        y = predected[local_target]
-        acc = round(accuracy_score(x, y),2)
-        f1 = round(f1_score(x, y),2)
-        pre = round(precision_score(x, y),2)
-        recall = round(recall_score(x, y),2)
-        tn, fp, fn, tp = confusion_matrix(x, y).ravel()
-        specificity = round(tn / (tn + fp),2)
+        y_true = self.true_values
+        y_pred = predected[self.target]
+        # Handling different classification types (binary, multiclass)
+        number_of_classes = len(self.target_col.unique())
+        assert (number_of_classes >= 2) , "Target column contains less than 2 classes."
+        if number_of_classes == 2: # binary classification
+            acc = accuracy_score(y_true, y_pred)
+            f1 = f1_score(y_true, y_pred)
+            pre = precision_score(y_true, y_pred)
+            recall = recall_score(y_true, y_pred)
+            h_loss = hamming_loss(y_true, y_pred)
+        elif number_of_classes > 2: # multiclass classification
+            acc = accuracy_score(y_true, y_pred)
+            f1 = f1_score(y_true, y_pred, average = self.average_type)
+            pre = precision_score(y_true, y_pred, average = self.average_type)
+            recall = recall_score(y_true, y_pred, average = self.average_type)
+            h_loss = hamming_loss(y_true, y_pred)
 
         dict_metrics = {
             "Accuracy": acc,
             "f1": f1,
             "Precision": pre,
             "Recall": recall,
-            "Specificity": specificity,
+            "hamming_loss": h_loss,
         }
-
-        # assign the resulting dictionary to self.metrics_dict
         self.metrics_dict = dict_metrics
     
-    # run function
     def run(self):
         self.preprocess()
         self.train_the_model()
