@@ -19,6 +19,7 @@ from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, Gradien
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neural_network import MLPClassifier
 from boruta import BorutaPy
+from sklearn.model_selection import cross_validate
 
 class Classification:
     """
@@ -52,7 +53,7 @@ class Classification:
         self.test_df = test_df
         assert (not (self.train_df.empty) and not (self.test_df.empty))
 
-        if classifier == 'custom':
+        if classifier in ['custom','auto']:
             self.classifier = classifier
         else:
             assert (
@@ -252,6 +253,25 @@ class Classification:
                 important_columns.append(cols[i])
         self.important_columns = important_columns
 
+    def favorable_classifier(self):
+        results = pd.DataFrame(columns=["Classifier", "Avg_Accuracy", "Avg_F1_Score"])
+        for name, clf in self.classifiers_map.items():
+            model = clf
+            cv_results = cross_validate(
+                model, self.train_df[self.used_columns], self.target_col , cv=10,
+                scoring=(['accuracy', 'f1'])
+            )
+
+            results = results.append({
+                "Classifier": name,
+                "Avg_Accuracy": cv_results['test_accuracy'].mean(),
+                "Avg_F1_Score": cv_results['test_f1'].mean()
+            }, ignore_index=True)
+            
+        results["Avg_Overall"] = (results["Avg_Accuracy"] + results["Avg_F1_Score"]) / 2
+        results = results.sort_values("Avg_Overall", ascending=False)
+        return self.classifiers_map[results.iloc[0,:]['Classifier']]
+
     def train_the_model(self):
         if self.feature_selection == 'correlation':
             self.select_high_correlation()
@@ -266,6 +286,8 @@ class Classification:
         y = self.target_col
         if self.classifier == "custom":
             classifier = self.get_custom_classifier()
+        elif self.classifier == 'auto':
+            classifier = self.favorable_classifier()
         else:
             classifier = self.classifiers_map[self.classifier]
 
