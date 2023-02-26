@@ -20,6 +20,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.neural_network import MLPClassifier
 from boruta import BorutaPy
 from sklearn.model_selection import cross_validate
+from sklearn.model_selection import learning_curve
 
 class Classification:
     """
@@ -305,6 +306,29 @@ class Classification:
 
         self.model = classifier(**self.kwargs)
         self.model.fit(X, y)
+
+    def accuracy_history(self):
+        
+        train_sizes, train_scores, test_scores = learning_curve(
+            self.model,
+            self.train_df[self.used_columns], 
+            self.target_col,
+            cv=10, 
+            scoring='accuracy', 
+            n_jobs=-1, 
+            train_sizes=np.linspace(0.1, 1.0, 7)
+            )
+        train_scores_mean = np.mean(train_scores, axis=1)
+        test_scores_mean = np.mean(test_scores, axis=1)
+        title = str(self.model)[:-2] +  ' learning curves'
+
+        data = {
+            'x':train_sizes,
+            'y1':train_scores_mean,
+            'y2':test_scores_mean,
+            'title':title,
+        }
+        return data
 
     def gen_pred_df(self, df):
         preds = self.model.predict(df[self.used_columns])
