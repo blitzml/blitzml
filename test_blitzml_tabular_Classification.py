@@ -6,6 +6,28 @@ train_df = pd.read_csv("auxiliary/datasets/banknote/train.csv")
 test_df = pd.read_csv("auxiliary/datasets/banknote/test.csv")
 
 
+def test_using_cross_validation():
+    auto = Classification(
+        train_df,
+        test_df,
+        classifier='RF',
+        cross_validation_k_folds = 5
+        )
+    auto.run()
+    assert len(auto.metrics_dict['cross_validation_score']) == 5
+    assert auto.metrics_dict['accuracy'] > 0 
+
+def test_using_train_validation_curve():
+    auto = Classification(
+        train_df,
+        test_df,
+        classifier='RF',
+        )
+    auto.run()
+    assert auto.metrics_dict['accuracy'] > 0 
+    assert len(auto.accuracy_history()['y1'])>0
+
+
 def test_validation_percent_greater_than_90_percent_fail():
     with pytest.raises(AssertionError):
         auto = Classification(
@@ -26,7 +48,7 @@ def test_different_feature_selection_modes():
             feature_selection = mode
             )
         auto.run()
-        assert auto.metrics_dict['Accuracy'] > 0    
+        assert auto.metrics_dict['accuracy'] > 0    
 def test_train_dataset_without_target_column_fail():
     with pytest.raises(AssertionError):
         auto = Classification(
@@ -37,7 +59,7 @@ def test_train_dataset_without_target_column_fail():
         auto.run()
     
 def test_classifiers():
-    classifier_list = ["RF","LDA","SVC","KNN","GNB","LR","AB","GB","DT","MLP"]
+    classifier_list = ["RF","LDA","SVC","KNN","GNB","LR","AB","GB","DT","MLP", "auto"]
     for classifier in classifier_list:
         auto = Classification(
             train_df,
@@ -45,7 +67,16 @@ def test_classifiers():
             classifier=classifier
             )
         auto.run()
-        assert auto.metrics_dict['Accuracy'] > 0
+        assert auto.metrics_dict['accuracy'] > 0
+
+def test_using_auto_classifier():
+    auto = Classification(
+        train_df,
+        test_df,
+        classifier='auto'
+        )
+    auto.run()
+    assert auto.metrics_dict['accuracy'] > 0
 
 def test_using_different_datasets():
     datasets = ['titanic', 'banknote', 'liqure quality']
@@ -58,7 +89,7 @@ def test_using_different_datasets():
             classifier='RF'
             )
         auto.run()
-        assert auto.metrics_dict['Accuracy'] > 0
+        assert auto.metrics_dict['accuracy'] > 0
 
 def test_using_custom_classifier():
     auto = Classification(
@@ -69,7 +100,7 @@ def test_using_custom_classifier():
         file_path = "auxiliary/scripts/dummy.py",
         )
     auto.run()
-    assert auto.metrics_dict['Accuracy'] > 0
+    assert auto.metrics_dict['accuracy'] > 0
 
 def test_using_unsupported_average_type_fails():
     train_df = pd.read_csv("auxiliary/datasets/liqure quality/train.csv")

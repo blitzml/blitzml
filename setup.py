@@ -8,7 +8,7 @@ long_description = (this_directory / "README.md").read_text()
 setup(
     name="blitzml",
     packages=find_packages(include=["blitzml", "blitzml.*"]),
-    version="0.11.0",
+    version="0.12.0",
     description="A low-code library for machine learning pipelines",
     author="AI Team",
     license="MIT",

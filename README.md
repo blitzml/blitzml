@@ -58,7 +58,16 @@ print(metrics_dict)
 - MLPClassifier 'MLP'
 
 The possible arguments for each model can be found in the [sklearn docs](https://scikit-learn.org/stable/user_guide.html)
+## Using 'auto' to choose the best scoring classifier (f1-score)
 
+```python
+# instead of specifying a classifier name, we pass "custom" to the classifier argument.
+auto = Classification(
+    train_df,
+    test_df,
+    classifier = "auto"
+)
+```
 ## Working with a custom classifier
 
 ```python
@@ -104,6 +113,8 @@ auto = Classification(
     validation_percentage = 0.1 #default
 )
 ```
+### • Cross Validation
+### • Train, validation accuracy history
 ### • Multiclass metrics averaging type
 ```python
 auto = Classification(
@@ -118,7 +129,7 @@ auto = Classification(
 # Instead of
 auto.preprocess()
 auto.train_the_model()
-auto.gen_pred_df()
+auto.gen_pred_df(auto.test_df)
 auto.gen_metrics_dict()
 # You can simply use
 auto.run()

@@ -11,7 +11,8 @@ auto = Classification(
     train_df,
     test_df,
     classifier="MLP",
-    feature_selection = "correlation"
+    feature_selection = "correlation",
+    cross_validation_k_folds = 5
 )
 
 # first perform data preprocessing

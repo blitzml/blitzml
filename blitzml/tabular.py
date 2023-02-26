@@ -19,8 +19,7 @@ from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, Gradien
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neural_network import MLPClassifier
 from boruta import BorutaPy
-from sklearn.model_selection import cross_validate
-from sklearn.model_selection import learning_curve
+from sklearn.model_selection import cross_validate, learning_curve, cross_val_score
 
 class Classification:
     """
@@ -49,7 +48,8 @@ class Classification:
                  file_path = "None",
                  feature_selection = "none",
                  validation_percentage = 0.1,
-                 average_type = 'macro',
+                 average_type = 'macro', # for multiclass classification metrics
+                 cross_validation_k_folds = 1,
                  **kwargs):
         self.train_df = train_df
         self.test_df = test_df
@@ -76,6 +76,8 @@ class Classification:
         self.important_columns =None
         self.used_columns = None
         self.validation_percentage = validation_percentage
+        self.cross_validation_k_folds = cross_validation_k_folds
+        self.cross_validation_score = None 
         assert (self.validation_percentage<=0.9), "Validation % must be <=0.9"
         self.validation_df = None
         self.average_type = average_type
@@ -305,10 +307,15 @@ class Classification:
             classifier = self.classifiers_map[self.classifier]
 
         self.model = classifier(**self.kwargs)
+        # performing cross validation on the selected model and features
+        if self.cross_validation_k_folds > 1:
+            temp_model = self.model
+            self.cross_validation_score = cross_val_score(self.model, X, y, cv=self.cross_validation_k_folds)
+            self.model = temp_model
+
         self.model.fit(X, y)
 
     def accuracy_history(self):
-        
         train_sizes, train_scores, test_scores = learning_curve(
             self.model,
             self.train_df[self.used_columns], 
@@ -363,11 +370,12 @@ class Classification:
             h_loss = hamming_loss(y_true, y_pred)
 
         dict_metrics = {
-            "Accuracy": round(acc,2),
-            "f1": round(f1,2),
-            "Precision": round(pre,2),
-            "Recall": round(recall,2),
-            "hamming_loss": round(h_loss,2),
+            "accuracy": acc,
+            "f1": f1,
+            "precision": pre,
+            "recall": recall,
+            "hamming_loss": h_loss,
+            "cross_validation_score":self.cross_validation_score,
         }
         self.metrics_dict = dict_metrics
     
