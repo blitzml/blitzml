@@ -114,6 +114,14 @@ auto = Classification(
 )
 ```
 ### • Cross Validation
+```python
+auto = Classification(
+    '''
+    params
+    '''
+     cross_validation_k_folds = 5  
+)
+```
 ### • Train, validation accuracy history
 ### • Multiclass metrics averaging type
 ```python
