@@ -123,6 +123,11 @@ auto = Classification(
 )
 ```
 ### • Train, validation accuracy history
+```python
+    '''
+    params
+    '''
+    data=auto.accuracy_history()
 ### • Multiclass metrics averaging type
 ```python
 auto = Classification(
