@@ -61,7 +61,7 @@ The possible arguments for each model can be found in the [sklearn docs](https:/
 ## Using 'auto' to choose the best scoring classifier (f1-score)
 
 ```python
-# instead of specifying a classifier name, we pass "custom" to the classifier argument.
+# passing "auto" compares all models and chooses the best one
 auto = Classification(
     train_df,
     test_df,
@@ -121,21 +121,19 @@ auto = Classification(
     '''
      cross_validation_k_folds = 5  
 )
+# Returns an array of scores along with metrics_dict
 ```
 ### • Train, validation accuracy history
 ```python
-    '''
-    params
-    '''
-    data=auto.accuracy_history()
-### • Multiclass metrics averaging type
-```python
-auto = Classification(
-    '''
-    params
-    '''
-    average_type = 'macro' #default
-)
+    # After training the model you can get accuracy history
+    data = auto.accuracy_history()
+    # Returns:
+    {
+        'x':train_df_sample_sizes,
+        'y1':train_scores_mean,
+        'y2':test_scores_mean,
+        'title':title
+    }
 ```
 ### • Less coding
 ```python
