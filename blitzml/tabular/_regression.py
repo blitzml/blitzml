@@ -3,6 +3,9 @@ import numpy as np
 import pandas as pd
 import importlib.util
 from sklearn import preprocessing
+# ignore pandas warnings 
+import warnings
+warnings.filterwarnings('ignore')
 # metrics imports (to be replaced)
 from sklearn.metrics import (
     accuracy_score,
@@ -259,25 +262,23 @@ class Regression:
         elif self.feature_selection == None:
             self.used_columns = list(self.train_df.columns)
 
-    def favorable_classifier(self):
+    def favorable_regressor(self):
         x_train = self.train_df[self.used_columns]
         y_train  = self.target_col
-        results = pd.DataFrame(columns=["Classifier", "Avg_Accuracy", "Avg_F1_Score"])
-        for name, clf in self.classifiers_map.items():
+        results = pd.DataFrame(columns=["Regressor", "Avg_r2"])
+        for name, clf in self.regressors_map.items():
             model = clf()
             cv_results = cross_validate(
                 model, x_train , y_train , cv=10,
-                scoring=(['accuracy', 'f1'])
+                scoring=['r2']
             )
             results = results.append({
-                "Classifier": name,
-                "Avg_Accuracy": cv_results['test_accuracy'].mean(),
-                "Avg_F1_Score": cv_results['test_f1'].mean()
+                "Regressor": name,
+                "Avg_r2": cv_results['test_r2'].mean(),
             }, ignore_index=True)
             
-        results["Avg_Overall"] = (results["Avg_Accuracy"] + results["Avg_F1_Score"]) / 2
-        results = results.sort_values("Avg_Overall", ascending=False)
-        return self.classifiers_map[results.iloc[0,:]['Classifier']]
+        results = results.sort_values("Avg_r2", ascending=False)
+        return self.regressors_map[results.iloc[0,:]['Regressor']]
 
     def train_the_model(self):
         self.used_cols()
