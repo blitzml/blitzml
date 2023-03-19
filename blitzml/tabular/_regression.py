@@ -7,12 +7,11 @@ from sklearn import preprocessing
 import warnings
 warnings.filterwarnings('ignore')
 # metrics imports (to be replaced)
+from math import sqrt
 from sklearn.metrics import (
-    accuracy_score,
-    hamming_loss,
-    f1_score,
-    precision_score,
-    recall_score,
+    mean_squared_error, 
+    r2_score ,
+    mean_absolute_error
 )
 # Regressor models imports
 # from sklearn.svm import SVC
@@ -342,25 +341,18 @@ class Regression:
         predicted = self.gen_pred_df(self.validation_df)
         y_pred = predicted[self.target]
         y_true = self.true_values
-        
-        # replace with regression metrics 
-        # consider reverse-scaling y_true and y_pred before calculating metrics
-        # example of reverse scaling is in the 6th line of the "gen_pred_df" function (just above)
-        # please, remove these comments
 
-        acc = accuracy_score(y_true, y_pred)
-        f1 = f1_score(y_true, y_pred)
-        pre = precision_score(y_true, y_pred)
-        recall = recall_score(y_true, y_pred)
-        h_loss = hamming_loss(y_true, y_pred)
+        r2 = r2_score(y_true, y_pred)
+        mse = mean_squared_error(y_true, y_pred)
+        rmse = sqrt(mse)
+        mae = mean_absolute_error(y_true, y_pred)
 
         dict_metrics = {
-            "accuracy": acc,
-            "f1": f1,
-            "precision": pre,
-            "recall": recall,
-            "hamming_loss": h_loss,
-            "cross_validation_score":self.cross_validation_score, # please, don't remove this metric
+            "r2_score": r2,
+            "mean_squared_error": mse,
+            "root_mean_squared_error": rmse,
+            "mean_absolute_error" : mae,
+            "cross_validation_score":self.cross_validation_score, 
         }
         self.metrics_dict = dict_metrics
     
