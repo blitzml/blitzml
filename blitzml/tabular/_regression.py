@@ -6,19 +6,26 @@ from sklearn import preprocessing
 # ignore pandas warnings 
 import warnings
 warnings.filterwarnings('ignore')
-# metrics imports (to be replaced)
+# metrics imports 
 from math import sqrt
 from sklearn.metrics import (
     mean_squared_error, 
     r2_score ,
     mean_absolute_error
 )
-# Regressor models imports
-# from sklearn.svm import SVC
-# please remove the previous comments
+
+from sklearn.feature_selection import SelectKBest
+from sklearn.feature_selection import mutual_info_regression
+
+from sklearn.linear_model import LinearRegression, Ridge, Lasso
+from sklearn.neural_network import MLPRegressor
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.svm import SVR
+from sklearn.gaussian_process import GaussianProcessRegressor
 
 # preprocessing and cross validation
-from boruta import BorutaPy
 from sklearn.model_selection import cross_validate, learning_curve, cross_val_score
 
 class Regression:
@@ -28,7 +35,15 @@ class Regression:
     """
 
     regressors_map = {
-        # "RF": RandomForestClassifier,  >> Example from classification, Please remove this line
+        "LRR": LinearRegression,
+        "RDG": Ridge,
+        "LSS": Lasso,
+        "MLPR": MLPRegressor,
+        "DTR": DecisionTreeRegressor,
+        "RFR": RandomForestRegressor,
+        "KNN": KNeighborsRegressor,
+        "SVR": SVR,
+        "GPR": GaussianProcessRegressor,
     }
 
     def __init__(self,
@@ -236,19 +251,13 @@ class Regression:
         self.columns_high_corr = columns_high_corr
 
     def select_important_features(self):
-        train = self.train_df
-        target_col = self.target_col
-        model = RandomForestClassifier(random_state=0)
-        # define Boruta feature selection method
-        feat_selector = BorutaPy(model, n_estimators='auto', verbose=0, random_state=1)
-        # find all relevant features
-        feat_selector.fit(train.values, target_col.values)
-        cols = list(train.columns)
-        importance = list(feat_selector.support_)
-        important_columns = []
-        for i in range(len(importance)):
-            if importance[i]==True:
-                important_columns.append(cols[i])
+        fs = SelectKBest(score_func=mutual_info_regression, k='all')
+        fs.fit(self.train_df, self.target_col)
+        fs_df = pd.DataFrame({
+        "feature":list(fs.feature_names_in_),
+        "importance":list(fs.scores_)
+        })
+        important_columns= list(fs_df[fs_df['importance'] >= 0.1]['feature'])
         self.important_columns = important_columns
 
     def used_cols(self):
@@ -361,5 +370,3 @@ class Regression:
         self.train_the_model()
         self.gen_pred_df(self.test_df)
         self.gen_metrics_dict()
-
-
