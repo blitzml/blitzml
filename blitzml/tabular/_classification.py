@@ -2,6 +2,9 @@ import sys
 import numpy as np
 import pandas as pd
 import importlib.util
+# ignore pandas warnings 
+import warnings
+warnings.filterwarnings('ignore')
 from sklearn import preprocessing
 from sklearn.metrics import (
     accuracy_score,

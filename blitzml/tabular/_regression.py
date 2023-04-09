@@ -20,7 +20,7 @@ from sklearn.feature_selection import mutual_info_regression
 from sklearn.linear_model import LinearRegression, Ridge, Lasso
 from sklearn.neural_network import MLPRegressor
 from sklearn.tree import DecisionTreeRegressor
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.svm import SVR
 from sklearn.gaussian_process import GaussianProcessRegressor
@@ -35,12 +35,13 @@ class Regression:
     """
 
     regressors_map = {
-        "LRR": LinearRegression,
+        "LR": LinearRegression,
         "RDG": Ridge,
         "LSS": Lasso,
-        "MLPR": MLPRegressor,
-        "DTR": DecisionTreeRegressor,
-        "RFR": RandomForestRegressor,
+        "MLP": MLPRegressor,
+        "GB": GradientBoostingRegressor,
+        "DT": DecisionTreeRegressor,
+        "RF": RandomForestRegressor,
         "KNN": KNeighborsRegressor,
         "SVR": SVR,
         "GPR": GaussianProcessRegressor,
@@ -79,6 +80,7 @@ class Regression:
         self.columns_high_corr = None
         self.important_columns =None
         self.used_columns = None
+        self.true_values = None
         self.validation_percentage = validation_percentage
         self.cross_validation_k_folds = cross_validation_k_folds
         self.cross_validation_score = None 
@@ -242,12 +244,12 @@ class Regression:
         # classify columns by correlation
         corr_df = train_n.corr()
         # drop target raw 
-        corr_df.drop(index=target,axis=0, inplace=True)
-        # calculate corelation ref
-        corr_ref = round(np.percentile(abs(corr_df[target]),33),4)
+        corr_df.drop(index=target, axis=0, inplace=True)
+        # calculate correlation ref
+        corr_ref = round(np.nanpercentile(abs(corr_df[target]),33), 4)
         columns_high_corr = list(corr_df[(corr_df[target] >= corr_ref)].index) + list(
-            corr_df[(corr_df[target] <= -corr_ref)].index
-        )
+            corr_df[(corr_df[target] <= -corr_ref)].index)
+
         self.columns_high_corr = columns_high_corr
 
     def select_important_features(self):
@@ -305,7 +307,7 @@ class Regression:
         # performing cross validation on the selected model and features
         if self.cross_validation_k_folds > 1:
             temp_model = self.model
-            self.cross_validation_score = cross_val_score(self.model, X, y, cv=self.cross_validation_k_folds, scoring='mean_squared_error')
+            self.cross_validation_score = cross_val_score(self.model, X, y, cv=self.cross_validation_k_folds, scoring='neg_root_mean_squared_error')
             # reverse scaling
             self.cross_validation_score = self.scaler.inverse_transform(np.asarray(self.cross_validation_score).reshape(-1, 1)).reshape(1, -1)[0]
             self.model = temp_model
@@ -313,7 +315,6 @@ class Regression:
         self.model.fit(X, y)
 
     def RMSE_history(self):
-        
         train_sizes, train_scores, test_scores = learning_curve(
             self.model,
             self.train_df[self.used_columns], 
@@ -350,6 +351,10 @@ class Regression:
         predicted = self.gen_pred_df(self.validation_df)
         y_pred = predicted[self.target]
         y_true = self.true_values
+
+        # inverse scaling
+        y_pred = self.scaler.inverse_transform(np.asarray(y_pred).reshape(-1, 1)).reshape(1, -1)[0]
+        y_true = self.scaler.inverse_transform(np.asarray(y_true).reshape(-1, 1)).reshape(1, -1)[0]
 
         r2 = r2_score(y_true, y_pred)
         mse = mean_squared_error(y_true, y_pred)

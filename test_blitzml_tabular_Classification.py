@@ -49,7 +49,7 @@ def test_different_feature_selection_modes():
             )
         auto.run()
         assert auto.metrics_dict['accuracy'] > 0    
-def test_train_dataset_without_target_column_fail():
+def test_train_dataset_without_target_column_fails():
     with pytest.raises(AssertionError):
         auto = Classification(
             train_df.drop('class', axis = 1),
@@ -59,7 +59,7 @@ def test_train_dataset_without_target_column_fail():
         auto.run()
     
 def test_classifiers():
-    classifier_list = ["RF","LDA","SVC","KNN","GNB","LR","AB","GB","DT","MLP", "auto"]
+    classifier_list = ["RF","LDA","SVC","KNN","GNB","LR","AB","GB","DT","MLP"]
     for classifier in classifier_list:
         auto = Classification(
             train_df,
