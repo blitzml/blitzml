@@ -10,6 +10,8 @@
 - [Install BlitzML](#install-blitzml)
 - [Classification](#classification)
 - [Regression](#regression)
+- [Clustering](#clustering)
+
 
 
 # Install BlitzML  
@@ -53,11 +55,11 @@ print(metrics_dict)
 
 ## Available Classifiers
 
-- Random Forest 'RF'
-- LinearDiscriminantAnalysis 'LDA'
-- Support Vector Classifier 'SVC'
-- KNeighborsClassifier 'KNN'
-- GaussianNB 'GNB'
+- Random Forest 'RF' 
+- LinearDiscriminantAnalysis 'LDA' 
+- Support Vector Classifier 'SVC' 
+- KNeighborsClassifier 'KNN' 
+- GaussianNB 'GNB' 
 - LogisticRegression 'LR'
 - AdaBoostClassifier 'AB'
 - GradientBoostingClassifier 'GB'
@@ -236,6 +238,99 @@ preprocess()
 train_the_model()  
 gen_pred_df(Regression.test_df)  
 gen_metrics_dict()  
+# Clustering 
+
+```python
+from blitzml.unsupervised import Clustering
+import pandas as pd
+
+# prepare your dataframe
+train_df = pd.read_csv("auxiliary/datasets/customer personality/train.csv")
+
+# create the pipeline
+auto = Clustering(train_df, clustering_algorithm = 'KM')
+
+# first perform data preprocessing
+auto.preprocess()
+# second train the model
+auto.train_the_model()
+
+# After training the model we can generate:
+auto.gen_pred_df()
+auto.gen_metrics_dict()
+
+# We can get their values using:
+print(auto.pred_df.head())
+print(auto.metrics_dict)
+```
+
+
+## Available Clustering Algorithms 
+
+- K-Means 'KM' 
+- Affinity Propagation 'AP' 
+- Agglomerative Clustering 'AC' 
+- Mean Shift 'MS' 
+- Spectral Clustering 'SC' 
+- Birch 'Birch' 
+- Bisecting K-Means 'BKM' 
+- OPTICS 'OPTICS' 
+- DBSCAN 'DBSCAN' 
+
+## **Parameters** 
+**clustering_algorithm**  
+options: {"KM", "AP", "AC", "MS", "SC", "Birch", "BKM", "OPTICS", "DBSCAN", 'auto', 'custom'}, default = 'KM' 
+`auto: selects the best scoring clustering algorithm based on silhouette score` 
+`custom: enables providing a custom clustering algorithm through *file_path* and *class_name* parameters` 
+**file_path** 
+when using 'custom' clustering_algorithm, pass the path of the file containing the custom class, default = 'none'   
+**class_name**
+when using 'custom' clustering_algorithm, pass the class name through this parameter, default = 'none' 
+**feature_selection** 
+options: {'importance', 'none'}, default = 'none' 
+`importance: use feature columns that are important for the model to predict the target` 
+`none: use all feature columns` 
+****kwargs** 
+optional parameters for the chosen clustering_algorithm. you can find available parameters in the [sklearn docs](https://scikit-learn.org/stable/user_guide.html) 
+## **Attributes** 
+**train_df** 
+the preprocessed train dataset (after running `Clustering.preprocess()`)  
+**model** 
+the trained model (after running `Clustering.train_the_model()`) 
+**pred_df** 
+the prediction dataframe (test_df + predicted target) (after running `Clustering.gen_pred_df()`) 
+**metrics_dict** 
+the validation metrics (after running `Clustering.gen_metrics_dict()`) 
+{ 
+    "silhouette_score": sil_score, 
+    "calinski_harabasz_score": cal_har_score, 
+    "davies_bouldin_score": dav_boul_score, 
+    "n_clusters" : n 
+} 
+## **Methods** 
+**preprocess()** 
+perform preprocessing on train_df  
+**train_the_model()** 
+train the chosen clustering algorithm on the train_df 
+**clustering_visualization()** 
+2-d visualization of the data points with its corresponding labels  (after doing dimensionality reduction using Principal Componenet Analysis). 
+*returns:* 
+{ 
+    'principal_component_1':pc1, 
+    'principal_component_2':pc2, 
+    'cluster_labels':labels, 
+    'title':title 
+} 
+**gen_pred_df()** 
+generates the prediction dataframe and assigns it to the `pred_df` attribute 
+**gen_metrics_dict()** 
+generates the clustering metrics and assigns it to the `metrics_dict`  
+**run()** 
+a shortcut that runs the following methods: 
+preprocess() 
+train_the_model() 
+gen_pred_df() 
+gen_metrics_dict() 
 ## Development  
 
 - Clone the repo  
