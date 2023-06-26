@@ -301,7 +301,7 @@ class TimeSeries:
 
     def select_important_features(self):
         fs = SelectKBest(score_func=mutual_info_regression, k='all')
-        fs.fit(self.train_df, self.target_col)
+        fs.fit(self.train_df.drop(self.date_col_name, axis = 1), self.target_col)
         fs_df = pd.DataFrame({
         "feature":list(fs.feature_names_in_),
         "importance":list(fs.scores_)
@@ -315,9 +315,13 @@ class TimeSeries:
             self.used_columns = self.columns_high_corr
         elif self.feature_selection == 'importance':
             self.select_important_features()
-            self.used_columns = self.important_columns
+            if self.important_columns:
+                self.used_columns = self.important_columns
+            else:
+                print('there are no important columns, the model used all features')
+                self.used_columns = list(self.train_df.drop(self.date_col_name, axis = 1).columns)
         elif self.feature_selection == None:
-            self.used_columns = list(self.train_df.columns)
+            self.used_columns = list(self.train_df.drop(self.date_col_name, axis = 1).columns)
 
     def favorable_regressor(self):
         x_train = self.train_df[self.used_columns]
