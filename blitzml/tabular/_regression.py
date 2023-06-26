@@ -268,7 +268,11 @@ class Regression:
             self.used_columns = self.columns_high_corr
         elif self.feature_selection == 'importance':
             self.select_important_features()
-            self.used_columns = self.important_columns
+            if self.important_columns:
+                self.used_columns = self.important_columns
+            else:
+                print('there are no important columns, the model used all features')
+                self.used_columns = list(self.train_df.columns)
         elif self.feature_selection == None:
             self.used_columns = list(self.train_df.columns)
 

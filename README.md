@@ -10,6 +10,7 @@
 - [Install BlitzML](#install-blitzml)
 - [Classification](#classification)
 - [Regression](#regression)
+- [Time-Series](#time-series)
 - [Clustering](#clustering)
 
 
@@ -238,6 +239,34 @@ preprocess()
 train_the_model()  
 gen_pred_df(Regression.test_df)  
 gen_metrics_dict()  
+# Time-series
+time series is a particular problem of Regression, but time series have some additional functions:
+- stationary test (IsStationary()). 
+- convert to stationary.
+- reverse predicted.
+
+and the dataset must have a DateTime column, even if the DataType of this column is Object.
+```python
+from blitzml.tabular import TimeSeries 
+import pandas as pd
+
+# prepare your dataframes
+train_df = pd.read_csv("train_dataset.csv")
+test_df = pd.read_csv("test_dataset.csv")
+
+# create the pipeline
+auto = TimeSeries(train_df, test_df, regressor = 'RF')
+
+# Perform the entire process:
+auto.run()
+
+# We can get their values using:
+pred_df = auto.pred_df
+metrics_dict = auto.metrics_dict
+
+print(pred_df.head())
+print(metrics_dict)
+```
 # Clustering 
 
 ```python
