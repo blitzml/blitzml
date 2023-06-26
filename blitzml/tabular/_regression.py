@@ -117,7 +117,7 @@ class Regression:
         null_df = train.isnull().mean().to_frame()
         null_df["column"] = null_df.index
         null_df.index = np.arange(null_df.shape[0])
-        null_cols = list(null_df[null_df[0].between(0.001, 0.05)]["column"])
+        null_cols = list(null_df[(null_df[0] > 0) & (null_df[0] < 0.05) ]["column"])
         for colmn in null_cols:
             null_index = list(train[train[colmn].isnull()].index)
             train.drop(index=null_index, axis=0, inplace=True)
