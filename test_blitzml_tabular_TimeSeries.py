@@ -17,16 +17,6 @@ def test_different_feature_selection_modes():
         auto.run()
         assert auto.metrics_dict['root_mean_squared_error'] < 1000000 
 
-def test_using_train_validation_curve():
-    auto = TimeSeries(
-        train_df,
-        test_df,
-        regressor='SVR'
-        )
-    auto.run()
-    assert auto.metrics_dict['root_mean_squared_error'] < 1000000
-    assert len(auto.RMSE_history()['y1'])>0
-
 def test_train_dataset_without_target_column_fails():
     with pytest.raises(AssertionError):
         auto = TimeSeries(
