@@ -363,27 +363,30 @@ class TimeSeries:
 
         self.model.fit(X, y)
 
-    def RMSE_history(self):
-        train_sizes, train_scores, test_scores = learning_curve(
-            self.model,
-            self.train_df[self.used_columns], 
-            self.target_col,
-            cv=5, 
-            scoring='neg_root_mean_squared_error', 
-            n_jobs=-1, 
-            train_sizes=np.linspace(0.1, 1.0, 7)
-            )
-        train_scores_mean = -np.mean(train_scores, axis=1)
-        test_scores_mean = -np.mean(test_scores, axis=1)
-        title = str(self.model)[:-2] +  ' learning curves'
+    def Train_Pred_Visualization(self):
+        if self.stationary ==True :
+            x_train = self.train_df[self.date_col_name]
+            y_train = self.target_col
+            x_pred = self.test_df[self.date_col_name]
+            y_pred= self.pred_df[self.target]     
+            
+            x_train = x_train.tolist()
+            y_train = y_train.tolist()
+            x_pred = x_pred.tolist()
+            y_pred = y_pred.tolist()
 
-        data = {
-            'x':train_sizes,
-            'y1':train_scores_mean,
-            'y2':test_scores_mean,
+            title = str(self.target)[:] + 'overtime'
+
+            data = {
+            'x_train': x_train,
+            'y_train': y_train,
+            'x_pred':x_pred,
+            'y_pred':y_pred,
             'title':title,
-        }
-        return data
+              }
+            return data
+        else:
+            print("Sorry, the target column isn't stationary")
 
     def gen_pred_df(self, df):
         preds = self.model.predict(df[self.used_columns])
