@@ -364,29 +364,28 @@ class TimeSeries:
         self.model.fit(X, y)
 
     def Train_Pred_Visualization(self):
-        if self.stationary ==True :
-            x_train = self.train_df[self.date_col_name]
-            y_train = self.target_col
-            x_pred = self.test_df[self.date_col_name]
-            y_pred= self.pred_df[self.target]     
-            
-            x_train = x_train.tolist()
-            y_train = y_train.tolist()
-            x_pred = x_pred.tolist()
-            y_pred = y_pred.tolist()
 
-            title = str(self.target)[:] + 'overtime'
+        x_train = self.train_target.index
+        y_train = self.train_target
+        x_pred = self.test_df[self.date_col_name]
+        y_pred= self.pred_df[self.target]     
+        
+        x_train = x_train.tolist()
+        y_train = y_train.tolist()
+        x_pred = x_pred.tolist()
+        y_pred = y_pred.tolist()
 
-            data = {
-            'x_train': x_train,
-            'y_train': y_train,
-            'x_pred':x_pred,
-            'y_pred':y_pred,
-            'title':title,
-              }
-            return data
-        else:
-            print("Sorry, the target column isn't stationary")
+        title = f'{self.target} overtime'
+
+        data = {
+        'x_train': x_train,
+        'y_train': y_train,
+        'x_pred':x_pred,
+        'y_pred':y_pred,
+        'title':title,
+        }
+        return data
+
 
     def gen_pred_df(self, df):
         preds = self.model.predict(df[self.used_columns])
