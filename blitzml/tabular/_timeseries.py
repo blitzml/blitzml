@@ -1,9 +1,8 @@
-import sys
 import numpy as np
 import pandas as pd
-import importlib.util
-from pandas.errors import ParserError
-from sklearn import preprocessing
+import matplotlib.pyplot as plt
+from pandas.errors import ParserError 
+from datetime import datetime
 # ignore pandas warnings 
 import warnings
 warnings.filterwarnings('ignore')
@@ -14,11 +13,10 @@ from sklearn.metrics import (
     r2_score ,
     mean_absolute_error
 )
-
+from supervised import supervised
 from statsmodels.tsa.stattools import adfuller
 
-from sklearn.feature_selection import SelectKBest
-from sklearn.feature_selection import mutual_info_regression
+
 
 from sklearn.linear_model import LinearRegression, Ridge, Lasso
 from sklearn.neural_network import MLPRegressor
@@ -28,16 +26,14 @@ from sklearn.neighbors import KNeighborsRegressor
 from sklearn.svm import SVR
 from sklearn.gaussian_process import GaussianProcessRegressor
 
-# preprocessing and cross validation
-from sklearn.model_selection import cross_validate, learning_curve, cross_val_score
 
-class TimeSeries:
+class TimeSeries(supervised):
     """
     Parameters:
         :param kwargs: is the regressor arguments
     """
 
-    regressors_map = {
+    algorithms_map = {
         "LR": LinearRegression,
         "RDG": Ridge,
         "LSS": Lasso,
@@ -53,7 +49,7 @@ class TimeSeries:
     def __init__(self,
                 train_df,
                 test_df,
-                regressor="RF",
+                algorithm="RF",
                 class_name = "None",
                 file_path = "None",
                 feature_selection = "none",
@@ -64,13 +60,13 @@ class TimeSeries:
         self.test_df = test_df
         assert (not (self.train_df.empty) and not (self.test_df.empty))
 
-        if regressor in ['custom','auto']:
-            self.regressor = regressor
+        if algorithm in ['custom','auto']:
+            self.algorithm = algorithm
         else:
             assert (
-                regressor in self.regressors_map.keys()
-            ), "Unsupported regressor provided"
-            self.regressor = regressor
+                algorithm in self.algorithms_map.keys()
+            ), "Unsupported algorithm provided"
+            self.algorithm = algorithm
 
         self.class_name = class_name
         self.file_path = file_path
@@ -89,111 +85,15 @@ class TimeSeries:
         self.cross_validation_score = None 
         assert (self.validation_percentage<=0.9), "Validation % must be <=0.9"
         self.validation_df = None
-        # self.scaler = None
         self.stationary = None
-
+        self.problem_type = 'Time-Series'
+        self.used_metric = 'r2'
         if feature_selection in ['correlation', 'importance']:
             self.feature_selection = feature_selection
         else:
             self.feature_selection = None
 
-
-    def get_custom_regressor(self):
-        assert(
-                self.class_name != "None" and self.file_path != "None"
-            ), "Didn't provide the custom regressor arguments!"
-
-        # load module using a class_name and a file_path
-        spec = importlib.util.spec_from_file_location(self.class_name, self.file_path)
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[self.class_name] = module
-        spec.loader.exec_module(module)
-
-        # returns the class from the loaded module
-        return module.__dict__[self.class_name] 
-
-    def preprocess(self):
-        train = self.train_df.copy()
-        test = self.test_df.copy()
-        # drop duplicates
-        train.drop_duplicates(inplace=True)
-        # drop raws if contains null data in column have greater than 95% valid data (from train only)
-        null_df = train.isnull().mean().to_frame()
-        null_df["column"] = null_df.index
-        null_df.index = np.arange(null_df.shape[0])
-        null_cols = list(null_df[(null_df[0] > 0) & (null_df[0] < 0.05) ]["column"])
-        for colmn in null_cols:
-            null_index = list(train[train[colmn].isnull()].index)
-            train.drop(index=null_index, axis=0, inplace=True)
-        # get target data (column name,dtype,save values in list)
-        target = None
-        for col in train.columns:
-            if col not in test.columns:
-                target = col
-        assert (target != None), 'train_df does not contain target column'
-        # get dtype
-        dtype = train.dtypes.to_frame()
-        dtype["column"] = dtype.index
-        dtype.index = np.arange(dtype.shape[0])
-        dt = str(dtype[dtype["column"] == target].iloc[0, 0])  # target dtype
-        if "int" in dt:
-            dt = int
-        elif "float" in dt:
-            dt = float
-        elif "object" in dt:
-            dt = str
-        else:
-            dt = "unknown"
-        # save target list
-        target_list = train[target]
-        # concatinate datasets, first columns must be identical
-        train.drop(columns=[target], inplace=True)
-        train[target] = target_list
-        train[target] = train[target].astype(str)
-        test[target] = np.repeat("test_dataset", test.shape[0])
-        df = pd.concat([train, test])  # concatinate datasets
-        # drop columns na >= 25%
-        null_df = df.isnull().mean().to_frame()
-        null_df["column"] = null_df.index
-        null_df.index = np.arange(null_df.shape[0])
-        null_cols = list(null_df[null_df[0] >= 0.25]["column"])
-        df.drop(columns=null_cols, inplace=True)
-        # now we should know what is numerical columns and categorical columns
-        dtype = df.dtypes.to_frame()
-        dtype["column"] = dtype.index
-        dtype.index = np.arange(dtype.shape[0])
-        cat_colmns = []
-        num_colmns = []
-        columns_genres = [cat_colmns, num_colmns]
-        num_values = [
-            "float64",
-            "int64",
-            "uint8",
-            "int32",
-            "int8",
-            "int16",
-            "uint16",
-            "uint32",
-            "uint64",
-            "float_",
-            "float16",
-            "float32",
-            "int_",
-            "int",
-            "float",
-        ]
-        for i in range(len(dtype.column)):
-            if "object" in str(dtype.iloc[i, 0]):
-                cat_colmns.append(dtype.column[i])
-            elif str(dtype.iloc[i, 0]) in num_values:
-                num_colmns.append(dtype.column[i])
-        # remove target column from lists (not from dataframe)
-        columns_genres = [cat_colmns, num_colmns]
-        for genre in columns_genres:
-            if target in genre:
-                genre.remove(target)
-        # detect date column
-        # convert date to datetime
+    def detect_date_column(self, df, cat_colmns):
         for c in df.columns[df.dtypes=='object']: 
             try:
                 df[c]=pd.to_datetime(df[c])
@@ -205,64 +105,19 @@ class TimeSeries:
         except:
             pass
         df.index = df[date_col_name]
-        # create date features
+        return date_col_name , df
+    
+    def create_date_features(self, df, date_col_name):
         df['hour'] = df.index.hour
         df['dayofweek'] = df.index.dayofweek
         df['quarter'] = df.index.quarter
         df['month'] = df.index.month
         df['year'] = df.index.year
         df['dayofyear'] = df.index.dayofyear
-        # drop columns has more than 7 unique values (from categorical columns)
-        columns_has_2 = []
-        # add year to columns_has_2 
-        columns_has_2.append('year')
-        columns_has_3to7 = []
-        columns_to_drop = []
-        for c_col in cat_colmns:
-            if df[c_col].nunique() > 7:
-                columns_to_drop.append(c_col)
-            elif 3 <= df[c_col].nunique() <= 7:
-                columns_has_3to7.append(c_col)
-            else:
-                columns_has_2.append(c_col)
-        # fillna in categorical columns
-        df[cat_colmns] = df[cat_colmns].fillna("unknown")
-        # fillna in numerical columns
-        for column in num_colmns:
-            df[column].fillna(value=df[column].mean(), inplace=True)
-        # now we can drop without raising error
-        df.drop(columns=columns_to_drop, inplace=True)
-        # encode the categorical
-        encoder = preprocessing.LabelEncoder()
-        for col in columns_has_2:
-            df[col] = encoder.fit_transform(
-                df[col]
-            )  # encode columns has 2 unique values in the same column 0, 1
-        # encode columns has 3-7 unique values
-        for cat in columns_has_3to7:
-            df = pd.concat([df, pd.get_dummies(df[cat], prefix=cat)], axis=1)
-            df = df.drop([cat], axis=1)
-        # split train and test
-        train_n = df[df[target] != "test_dataset"]
-        test_n = df[df[target] == "test_dataset"].drop(target, axis=1)
-        try:
-            train_n[target] = train_n[target].astype(dt)
-        except:
-            pass
-        # split for validation
-        validation_percentage = self.validation_percentage
-        validation_index = int(len(train) * (1 - validation_percentage))
-        # assign processed dataframes
-        self.train_df = train_n.iloc[:validation_index,:].drop(target, axis=1)
-        self.validation_df = train_n.iloc[validation_index:,:].drop(target, axis=1)
-        self.test_df = test_n
-        self.train_target = train_n[target]
-        self.target_col = train_n.iloc[:validation_index,:][target]
-        self.true_values = train_n.iloc[validation_index:,:][target] 
-        self.target = target
-        self.date_col_name = date_col_name 
+        return df.drop([date_col_name], axis = 1)
 
-    def IsStationary(self,target_col):
+
+    def is_stationary(self,target_col):
         result = adfuller(target_col)
         p_value = result[1]
         if p_value > 0.05:
@@ -279,101 +134,24 @@ class TimeSeries:
             "log": np.log(target_col)
         }
         for option_name, transformed_col in options.items():
-            if self.IsStationary(transformed_col.dropna()):
+            if self.is_stationary(transformed_col.dropna()):
                 print(f"{option_name} can convert data to stationary")
                 self.stationary = True
                 return transformed_col, option_name, target_head
         raise Exception(f"Sorry, the target column ({self.target}) isn't stationary and blitzML can't convert your data to stationary")
 
-    def select_high_correlation(self):
-        train_n = self.train_df
-        target = self.target
-        train_n[target] = self.target_col
-        # classify columns by correlation
-        corr_df = train_n.corr()
-        # drop target raw 
-        corr_df.drop(index=target, axis=0, inplace=True)
-        # calculate correlation ref
-        corr_ref = round(np.nanpercentile(abs(corr_df[target]),33), 4)
-        columns_high_corr = list(corr_df[(corr_df[target] >= corr_ref)].index) + list(
-            corr_df[(corr_df[target] <= -corr_ref)].index)
-        self.columns_high_corr = columns_high_corr
 
-    def select_important_features(self):
-        fs = SelectKBest(score_func=mutual_info_regression, k='all')
-        fs.fit(self.train_df.drop(self.date_col_name, axis = 1), self.target_col)
-        fs_df = pd.DataFrame({
-        "feature":list(fs.feature_names_in_),
-        "importance":list(fs.scores_)
-        })
-        important_columns= list(fs_df[fs_df['importance'] >= 0.1]['feature'])
-        self.important_columns = important_columns
+    def train_pred_visualization(self):
 
-    def used_cols(self):
-        if self.feature_selection == 'correlation':
-            self.select_high_correlation()
-            self.used_columns = self.columns_high_corr
-        elif self.feature_selection == 'importance':
-            self.select_important_features()
-            if self.important_columns:
-                self.used_columns = self.important_columns
-            else:
-                print('there are no important columns, the model used all features')
-                self.used_columns = list(self.train_df.drop(self.date_col_name, axis = 1).columns)
-        elif self.feature_selection == None:
-            self.used_columns = list(self.train_df.drop(self.date_col_name, axis = 1).columns)
-
-    def favorable_regressor(self):
-        x_train = self.train_df[self.used_columns]
-        y_train  = self.target_col
-        results = pd.DataFrame(columns=["Regressor", "Avg_r2"])
-        for name, clf in self.regressors_map.items():
-            model = clf()
-            cv_results = cross_validate(
-                model, x_train , y_train , cv=10,
-                scoring=['r2']
-            )
-            results = results.append({
-                "Regressor": name,
-                "Avg_r2": cv_results['test_r2'].mean(),
-            }, ignore_index=True)
-            
-        results = results.sort_values("Avg_r2", ascending=False)
-        return self.regressors_map[results.iloc[0,:]['Regressor']]
-
-    def train_the_model(self):
-        self.used_cols()
-        # use high correlation columns only in training
-        X = self.train_df[self.used_columns]
-        y = self.target_col
-        if self.regressor == "custom":
-            regressor = self.get_custom_regressor()
-        elif self.regressor == 'auto':
-            regressor = self.favorable_regressor()
-        else:
-            regressor = self.regressors_map[self.regressor]
-
-        self.model = regressor(**self.kwargs)
-
-        # performing cross validation on the selected model and features
-        if self.cross_validation_k_folds > 1:
-            temp_model = self.model
-            self.cross_validation_score = cross_val_score(self.model, X, y, cv=self.cross_validation_k_folds, scoring='neg_root_mean_squared_error')
-            self.model = temp_model
-
-        self.model.fit(X, y)
-
-    def Train_Pred_Visualization(self):
-
-        x_train = self.train_target.index
+        x_train = self.train_target.index.astype(str)
         y_train = self.train_target
-        x_pred = self.test_df[self.date_col_name]
+        x_pred = self.test_df.index.astype(str)
         y_pred= self.pred_df[self.target]     
         
-        x_train = x_train.tolist()
-        y_train = y_train.tolist()
-        x_pred = x_pred.tolist()
-        y_pred = y_pred.tolist()
+        x_train = list(x_train)
+        y_train = list(y_train)
+        x_pred = list(x_pred)
+        y_pred = list(y_pred)
 
         title = f'{self.target} overtime'
 
@@ -386,6 +164,22 @@ class TimeSeries:
         }
         return data
 
+    def convert_str_to_datetime(self, list_of_strings):
+        list_of_dates =   [datetime.strptime(date_string, '%Y-%m-%d') for date_string in list_of_strings]
+        return list_of_dates
+
+    def plot(self):
+        data = self.train_pred_visualization()
+        plt.figure(figsize=(20,10))
+        plt.title(data['title'], fontsize = 22)
+        plt.plot(self.convert_str_to_datetime(data['x_train']), data['y_train'],color = 'blue', label = 'training data')
+        plt.plot(self.convert_str_to_datetime(data['x_pred']), data['y_pred'],color = 'orange', label = 'predicted data')
+        plt.legend()
+        plt.xlabel('Date', fontsize = 18)
+        plt.ylabel(self.target, fontsize = 18)
+        plt.xticks(fontsize = 14)
+        plt.yticks(fontsize = 14)
+        plt.show()
 
     def gen_pred_df(self, df):
         preds = self.model.predict(df[self.used_columns])
@@ -427,8 +221,20 @@ class TimeSeries:
             return np.exp(predicted)
     
     def run(self):
-        self.preprocess()
-        if self.IsStationary(self.target_col):
+        train , test = self.drop_null_data()
+        target , dt , target_list = self.detect_target_data( train , test)
+        df = self.concat_dataframes(target, train , test, target_list)
+        df = self.drop_null_columns(df)
+        cat_colmns , num_colmns = self.classify_columns(df, target)
+        date_col_name , df = self.detect_date_column(df,cat_colmns)
+        df = self.create_date_features(df, date_col_name)
+        columns_has_2 , columns_has_3to7 , columns_to_drop = self.classify_categorical_columns(df , cat_colmns)
+        df = self.fill_null_values(df, cat_colmns, num_colmns)
+        df = self.encode_categorical_columns(df, columns_has_2, columns_has_3to7 , columns_to_drop)
+        train_n , test_n = self.split_dataframes(df, target, dt)
+        self.train_target = train_n[target]
+        self.split_train_validation(train_n,test_n,target)
+        if self.is_stationary(self.target_col):
             self.train_the_model()
             self.gen_pred_df(self.test_df)
             self.gen_metrics_dict()
