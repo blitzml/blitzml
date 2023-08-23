@@ -34,16 +34,10 @@ train_df = pd.read_csv("auxiliary/datasets/banknote/train.csv")
 test_df = pd.read_csv("auxiliary/datasets/banknote/test.csv")
 
 # create the pipeline
-auto = Classification(train_df, test_df, classifier = 'RF', n_estimators = 50)
+auto = Classification(train_df, test_df, algorithm = 'RF', n_estimators = 50)
 
-# first perform data preprocessing
-auto.preprocess()
-# second train the model
-auto.train_the_model()
-
-# After training the model we can generate:
-auto.gen_pred_df(auto.test_df)
-auto.gen_metrics_dict()
+# perform the entire process
+auto.run()
 
 # We can get their values using:
 pred_df = auto.pred_df
@@ -110,10 +104,13 @@ the validation metrics (after running `Classification.gen_metrics_dict()`)
     "cross_validation_score":cv_score, `returns None if cross_validation_k_folds==1`  
 }   
 ## **Methods**  
-**preprocess()**  
-perform preprocessing on train_df and test_df  
-**train_the_model()**  
-train the chosen classifier on the train_df  
+**run()**  
+a shortcut that runs the entire process:  
+- preprocessing
+- model training  
+- prediction  
+- model evaluation  
+
 **accuracy_history()**  
 accuracy scores when varying the sampling size of the train_df (after running `Classification.train_the_model()`).  
 *returns:*  
@@ -123,16 +120,11 @@ accuracy scores when varying the sampling size of the train_df (after running `C
     'y2':test_scores_mean,  
     'title':title  
 }  
-**gen_pred_df(test_df)**  
-generates the prediction dataframe and assigns it to the `pred_df` attribute  
-**gen_metrics_dict()**  
-generates the validation metrics and assigns it to the `metrics_dict`  
-**run()**  
-a shortcut that runs the following methods:  
-preprocess()  
-train_the_model()  
-gen_pred_df(Classification.test_df)  
-gen_metrics_dict()  
+**plot()**
+
+plotting line chart visualizes accuracy history
+
+
 # Regression  
 
 ```python
@@ -144,16 +136,10 @@ train_df = pd.read_csv("auxiliary/datasets/house prices/train.csv")
 test_df = pd.read_csv("auxiliary/datasets/house prices/test.csv")
 
 # create the pipeline
-auto = Regression(train_df, test_df, regressor = 'RF')
+auto = Regression(train_df, test_df, algorithm = 'RF')
 
-# first perform data preprocessing
-auto.preprocess()
-# second train the model
-auto.train_the_model()
-
-# After training the model we can generate:
-auto.gen_pred_df(auto.test_df)
-auto.gen_metrics_dict()
+# perform the entire process
+auto.run()
 
 # We can get their values using:
 pred_df = auto.pred_df
@@ -216,10 +202,19 @@ the validation metrics (after running `Regression.gen_metrics_dict()`)
     "cross_validation_score":cv_score, `returns None if cross_validation_k_folds==1`  
 }  
 ## **Methods**  
-**preprocess()**  
-perform preprocessing on train_df and test_df  
-**train_the_model()**  
-train the chosen regressor on the train_df  
+
+
+**run()**  
+a shortcut that runs the entire process:  
+- preprocessing
+- model training  
+- prediction  
+- model evaluation   
+
+**plot()**
+
+plotting line chart visualizes RMSE history
+
 **RMSE_history()**  
 RMSE scores when varying the sampling size of the train_df (after running `Regression.train_the_model()`).  
 *returns:*  
@@ -229,16 +224,6 @@ RMSE scores when varying the sampling size of the train_df (after running `Regre
     'y2':test_scores_mean,  
     'title':title  
 }  
-**gen_pred_df(test_df)**  
-generates the prediction dataframe and assigns it to the `pred_df` attribute  
-**gen_metrics_dict()**  
-generates the validation metrics and assigns it to the `metrics_dict`  
-**run()**  
-a shortcut that runs the following methods:  
-preprocess()  
-train_the_model()  
-gen_pred_df(Regression.test_df)  
-gen_metrics_dict()  
 # Time-series
 time series is a particular problem of Regression, but time series have some additional functions:
 - stationary test (IsStationary()). 
@@ -255,7 +240,7 @@ train_df = pd.read_csv("train_dataset.csv")
 test_df = pd.read_csv("test_dataset.csv")
 
 # create the pipeline
-auto = TimeSeries(train_df, test_df, regressor = 'RF')
+auto = TimeSeries(train_df, test_df, algorithm = 'RF')
 
 # Perform the entire process:
 auto.run()
