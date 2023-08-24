@@ -11,7 +11,7 @@ from sklearn.metrics import (
     r2_score ,
     mean_absolute_error
 )
-from supervised import supervised
+from ._supervised import Supervised_ML
 
 
 from sklearn.linear_model import LinearRegression, Ridge, Lasso
@@ -25,7 +25,7 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 # preprocessing and cross validation
 from sklearn.model_selection import learning_curve
 
-class Regression(supervised):
+class Regression(Supervised_ML):
     """
     Parameters:
         :param kwargs: is the regressor arguments

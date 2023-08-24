@@ -7,7 +7,7 @@ from sklearn.model_selection import cross_validate , cross_val_score
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import mutual_info_regression
 
-class supervised():
+class Supervised_ML():
     
     def get_custom_algorithm(self):
         assert(
@@ -164,7 +164,7 @@ class supervised():
     
     def split_train_validation(self,train_n,test_n, target):
         validation_percentage = self.validation_percentage
-        validation_index = int(len(self.train_df) * (1 - validation_percentage))
+        validation_index = int(len(train_n) * (1 - validation_percentage))
         # assign processed dataframes
         self.target_col = train_n.iloc[:validation_index,:][target]
         self.true_values = train_n.iloc[validation_index:,:][target]

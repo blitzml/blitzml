@@ -13,7 +13,7 @@ from sklearn.metrics import (
     r2_score ,
     mean_absolute_error
 )
-from supervised import supervised
+from ._supervised import Supervised_ML
 from statsmodels.tsa.stattools import adfuller
 
 
@@ -27,7 +27,7 @@ from sklearn.svm import SVR
 from sklearn.gaussian_process import GaussianProcessRegressor
 
 
-class TimeSeries(supervised):
+class TimeSeries(Supervised_ML):
     """
     Parameters:
         :param kwargs: is the regressor arguments

@@ -10,7 +10,7 @@ def test_using_cross_validation():
     auto = Regression(
         train_df,
         test_df,
-        regressor='SVR',
+        algorithm='SVR',
         cross_validation_k_folds = 5
         )
     auto.run()
@@ -21,18 +21,18 @@ def test_using_train_validation_curve():
     auto = Regression(
         train_df,
         test_df,
-        regressor='SVR'
+        algorithm='SVR'
         )
     auto.run()
     assert auto.metrics_dict['root_mean_squared_error'] < 1000000
-    assert len(auto.RMSE_history()['y1'])>0
+    assert len(auto.rmse_history()['y1'])>0
 
 def test_validation_percent_greater_than_90_percent_fail():
     with pytest.raises(AssertionError):
         auto = Regression(
             train_df,
             test_df,
-            regressor='SVR',
+            algorithm='SVR',
             validation_percentage = 0.91
             )
         auto.run()
@@ -43,7 +43,7 @@ def test_different_feature_selection_modes():
         auto = Regression(
             train_df,
             test_df,
-            regressor='SVR',
+            algorithm='SVR',
             feature_selection = mode
             )
         auto.run()
@@ -54,7 +54,7 @@ def test_train_dataset_without_target_column_fails():
         auto = Regression(
             train_df.drop('SalePrice', axis = 1),
             test_df,
-            regressor='SVR'
+            algorithm='SVR'
             )
         auto.run()
 def test_regressors():
@@ -63,7 +63,7 @@ def test_regressors():
         auto = Regression(
             train_df,
             test_df,
-            regressor=regressor
+            algorithm=regressor
             )
         auto.run()
         assert auto.metrics_dict['root_mean_squared_error'] < 100000000 
@@ -72,7 +72,7 @@ def test_using_auto_regressor():
     auto = Regression(
         train_df,
         test_df,
-        regressor='auto'
+        algorithm='auto'
         )
     auto.run()
     assert auto.metrics_dict['root_mean_squared_error'] < 100000000 
@@ -85,7 +85,7 @@ def test_using_different_datasets():
         auto = Regression(
             train_df,
             test_df,
-            regressor='SVR'
+            algorithm='SVR'
             )
         auto.run()
         assert auto.metrics_dict['root_mean_squared_error'] < 1000000
@@ -94,7 +94,7 @@ def test_using_custom_regressor():
     auto = Regression(
         train_df,
         test_df,
-        regressor='custom',
+        algorithm='custom',
         class_name = "classifier",
         file_path = "auxiliary/scripts/dummy.py",
         )
@@ -106,7 +106,7 @@ def test_using_wrong_custom_regressor_fails():
         auto = Regression(
             train_df,
             test_df,
-            regressor='custom',
+            algorithm='custom',
             class_name = "worng-class-name",
             file_path = "auxiliary/scripts/dummy.py",
             )
@@ -117,7 +117,7 @@ def test_using_wrong_custom_classifier_file_path_fails():
         auto = Regression(
             train_df,
             test_df,
-            regressor='custom',
+            algorithm='custom',
             class_name = "worng-class-name",
             file_path = "auxiliary/scripts/daaa.py",
             )
@@ -128,7 +128,7 @@ def test_using_unsupported_regressor_fails():
         auto = Regression(
             train_df,
             test_df,
-            regressor='Batman'
+            algorithm='Batman'
             )
         auto.run()
 
@@ -138,7 +138,7 @@ def test_using_empty_train_df_fails():
         auto = Regression(
             train_df,
             test_df,
-            regressor='SVR'
+            algorithm='SVR'
             )
         auto.run()
 
@@ -148,6 +148,6 @@ def test_using_empty_test_df_fails():
         auto = Regression(
             train_df,
             test_df,
-            regressor='SVR'
+            algorithm='SVR'
             )
         auto.run()

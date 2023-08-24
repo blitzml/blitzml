@@ -1,4 +1,4 @@
-from supervised import supervised
+from ._supervised import Supervised_ML
 import numpy as np
 import matplotlib.pyplot as plt
 # ignore pandas warnings 
@@ -21,7 +21,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import cross_validate, learning_curve, cross_val_score
 
-class Classification(supervised):
+class Classification(Supervised_ML):
     """
     Parameters:
         :param kwargs: is the classifier arguments

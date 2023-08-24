@@ -10,7 +10,7 @@ def test_using_cross_validation():
     auto = Classification(
         train_df,
         test_df,
-        classifier='RF',
+        algorithm='RF',
         cross_validation_k_folds = 5
         )
     auto.run()
@@ -21,7 +21,7 @@ def test_using_train_validation_curve():
     auto = Classification(
         train_df,
         test_df,
-        classifier='RF',
+        algorithm='RF',
         )
     auto.run()
     assert auto.metrics_dict['accuracy'] > 0 
@@ -33,7 +33,7 @@ def test_validation_percent_greater_than_90_percent_fail():
         auto = Classification(
             train_df,
             test_df,
-            classifier='RF',
+            algorithm='RF',
             validation_percentage = 0.91
             )
         auto.run()
@@ -44,7 +44,7 @@ def test_different_feature_selection_modes():
         auto = Classification(
             train_df,
             test_df,
-            classifier='RF',
+            algorithm='RF',
             feature_selection = mode
             )
         auto.run()
@@ -54,7 +54,7 @@ def test_train_dataset_without_target_column_fails():
         auto = Classification(
             train_df.drop('class', axis = 1),
             test_df,
-            classifier='RF'
+            algorithm='RF'
             )
         auto.run()
     
@@ -64,7 +64,7 @@ def test_classifiers():
         auto = Classification(
             train_df,
             test_df,
-            classifier=classifier
+            algorithm=classifier
             )
         auto.run()
         assert auto.metrics_dict['accuracy'] > 0
@@ -73,7 +73,7 @@ def test_using_auto_classifier():
     auto = Classification(
         train_df,
         test_df,
-        classifier='auto'
+        algorithm='auto'
         )
     auto.run()
     assert auto.metrics_dict['accuracy'] > 0
@@ -86,7 +86,7 @@ def test_using_different_datasets():
         auto = Classification(
             train_df,
             test_df,
-            classifier='RF'
+            algorithm='RF'
             )
         auto.run()
         assert auto.metrics_dict['accuracy'] > 0
@@ -95,7 +95,7 @@ def test_using_custom_classifier():
     auto = Classification(
         train_df,
         test_df,
-        classifier='custom',
+        algorithm='custom',
         class_name = "classifier",
         file_path = "auxiliary/scripts/dummy.py",
         )
@@ -109,7 +109,7 @@ def test_using_unsupported_average_type_fails():
         auto = Classification(
             train_df,
             test_df,
-            classifier='RF',
+            algorithm='RF',
             average_type = "cheese"
             )
         auto.run()
@@ -118,7 +118,7 @@ def test_using_wrong_custom_classifier_fails():
         auto = Classification(
             train_df,
             test_df,
-            classifier='custom',
+            algorithm='custom',
             class_name = "worng-class-name",
             file_path = "auxiliary/scripts/dummy.py",
             )
@@ -129,7 +129,7 @@ def test_using_wrong_custom_classifier_file_path_fails():
         auto = Classification(
             train_df,
             test_df,
-            classifier='custom',
+            algorithm='custom',
             class_name = "worng-class-name",
             file_path = "auxiliary/scripts/daaa.py",
             )
@@ -140,7 +140,7 @@ def test_using_unsupported_classifier_fails():
         auto = Classification(
             train_df,
             test_df,
-            classifier='Batman'
+            algorithm='Batman'
             )
         auto.run()
 
@@ -150,7 +150,7 @@ def test_using_empty_train_df_fails():
         auto = Classification(
             train_df,
             test_df,
-            classifier='RF'
+            algorithm='RF'
             )
         auto.run()
 
@@ -160,6 +160,6 @@ def test_using_empty_test_df_fails():
         auto = Classification(
             train_df,
             test_df,
-            classifier='RF'
+            algorithm='RF'
             )
         auto.run()

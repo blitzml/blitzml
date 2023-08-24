@@ -11,7 +11,7 @@ def test_different_feature_selection_modes():
         auto = TimeSeries(
             train_df,
             test_df,
-            regressor='RF',
+            algorithm='RF',
             feature_selection = mode
             )
         auto.run()
@@ -22,7 +22,7 @@ def test_train_dataset_without_target_column_fails():
         auto = TimeSeries(
             train_df.drop('Sales', axis = 1),
             test_df,
-            regressor='SVR'
+            algorithm='SVR'
             )
         auto.run()
 
@@ -32,7 +32,7 @@ def test_regressors():
         auto = TimeSeries(
             train_df,
             test_df,
-            regressor=regressor
+            algorithm=regressor
             )
         auto.run()
         assert auto.metrics_dict['root_mean_squared_error'] < 100000000
@@ -45,7 +45,7 @@ def test_using_different_datasets():
         auto = TimeSeries(
             train_df,
             test_df,
-            regressor='RF'
+            algorithm='RF'
             )
         auto.run()
         assert auto.metrics_dict['root_mean_squared_error'] < 1000000 
@@ -54,7 +54,7 @@ def test_using_auto_regressor():
     auto = TimeSeries(
         train_df,
         test_df,
-        regressor='RF',
+        algorithm='RF',
         feature_selection = "importance",
         )
     auto.run()
@@ -64,7 +64,7 @@ def test_using_custom_regressor():
     auto = TimeSeries(
         train_df,
         test_df,
-        regressor='custom',
+        algorithm='custom',
         class_name = "classifier",
         file_path = "auxiliary/scripts/dummy.py",
         )
@@ -76,7 +76,7 @@ def test_using_wrong_custom_regressor_fails():
         auto = TimeSeries(
             train_df,
             test_df,
-            regressor='custom',
+            algorithm='custom',
             class_name = "worng-class-name",
             file_path = "auxiliary/scripts/dummy.py",
             )
@@ -87,7 +87,7 @@ def test_using_wrong_custom_classifier_file_path_fails():
         auto = TimeSeries(
             train_df,
             test_df,
-            regressor='custom',
+            algorithm='custom',
             class_name = "worng-class-name",
             file_path = "auxiliary/scripts/daaa.py",
             )
@@ -98,7 +98,7 @@ def test_using_unsupported_regressor_fails():
         auto = TimeSeries(
             train_df,
             test_df,
-            regressor='Batman'
+            algorithm='Batman'
             )
         auto.run()
 
@@ -108,7 +108,7 @@ def test_using_empty_train_df_fails():
         auto = TimeSeries(
             train_df,
             test_df,
-            regressor='SVR',
+            algorithm='SVR',
             )
         auto.run()
 
@@ -118,7 +118,7 @@ def test_using_empty_test_df_fails():
         auto = TimeSeries(
             train_df,
             test_df,
-            regressor='SVR'
+            algorithm='SVR'
             )
         auto.run()  
 
