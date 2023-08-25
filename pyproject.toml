@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "blitzml"
-version = "0.12.0"
+version = "0.20.0"
 description = "A low-code library for machine learning pipelines"
 readme = "README.md"
 authors = [{ name = "AI Team", email = "CV.Team.CSE.2023@gmail.com" }]
@@ -20,7 +20,8 @@ dependencies = [
         'numpy<=1.23.4',
         'pandas>=1.5.1',
         'scikit-learn>=1.1.3',
-        "Boruta>=0.3"
+        "Boruta>=0.3",
+        "statsmodels<=0.14",
 ]
 requires-python = ">=3.8"
 
